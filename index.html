@@ -1,1 +1,2176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ninja Dash: The Lost Moon</title>
 
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#050713;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:100%;
+}
+
+#ui{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    color:white;
+}
+
+#top{
+    position:absolute;
+    top:18px;
+    left:18px;
+    right:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    text-shadow:0 2px 8px #000;
+}
+
+.panel{
+    background:#070b18aa;
+    border:1px solid #ffffff22;
+    border-radius:12px;
+    padding:10px 14px;
+    backdrop-filter:blur(5px);
+}
+
+.stat{
+    margin:3px 0;
+    font-weight:bold;
+}
+
+#speed{
+    color:#8de7ff;
+}
+
+#power{
+    color:#ffe77a;
+}
+
+#message{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:min(700px,90vw);
+    text-align:center;
+    background:#050816e8;
+    border:1px solid #ffffff25;
+    border-radius:20px;
+    padding:35px;
+    box-shadow:0 0 60px #000;
+    pointer-events:auto;
+}
+
+#message h1{
+    font-size:clamp(30px,6vw,64px);
+    letter-spacing:3px;
+    margin-bottom:15px;
+}
+
+#message h2{
+    color:#9eeeff;
+    margin-bottom:15px;
+}
+
+#message p{
+    line-height:1.7;
+    color:#cfd7ef;
+    margin:10px auto;
+    max-width:580px;
+}
+
+button{
+    margin-top:20px;
+    padding:13px 28px;
+    border:0;
+    border-radius:10px;
+    background:#7c6cff;
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 0 25px #7c6cff66;
+}
+
+button:hover{
+    transform:scale(1.04);
+}
+
+#controls{
+    position:absolute;
+    bottom:14px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:12px;
+    color:#ffffff99;
+    text-align:center;
+}
+
+.hidden{
+    display:none !important;
+}
+
+#chapter{
+    position:absolute;
+    left:50%;
+    top:15%;
+    transform:translateX(-50%);
+    font-size:15px;
+    letter-spacing:3px;
+    opacity:0;
+    transition:opacity .5s;
+    text-shadow:0 2px 10px #000;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+
+    <div id="top">
+
+        <div class="panel">
+            <div class="stat">🥷 NINJA DASH</div>
+            <div class="stat">⭐ Score: <span id="score">0</span></div>
+            <div class="stat">🪙 Coins: <span id="coins">0</span></div>
+            <div class="stat">💎 Gems: <span id="gems">0</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="stat">❤️ Lives: <span id="lives">3</span></div>
+            <div class="stat">⚡ Speed: <span id="speed">1.0x</span></div>
+            <div class="stat">✨ Power: <span id="power">None</span></div>
+        </div>
+
+    </div>
+
+    <div id="chapter"></div>
+
+    <div id="controls">
+        SPACE / W / ↑ = Jump &nbsp; • &nbsp;
+        SHIFT / X = Dash &nbsp; • &nbsp;
+        P = Pause
+    </div>
+
+    <div id="message">
+
+        <h1>🥷 NINJA DASH</h1>
+
+        <h2>THE LOST MOON</h2>
+
+        <p>
+            The night the Moon disappeared, everything changed.
+        </p>
+
+        <p>
+            The ancient Moon Crystal has vanished, and darkness
+            is spreading across the land.
+        </p>
+
+        <p>
+            Run beyond the village, cross dangerous worlds,
+            collect the lost fragments and discover the truth.
+        </p>
+
+        <p>
+            <b>Run. Jump. Dash. Survive. Discover.</b>
+        </p>
+
+        <button id="startButton">START JOURNEY</button>
+
+    </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* =====================================================
+   CANVAS
+===================================================== */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let W = 0;
+let H = 0;
+let groundY = 0;
+
+function resize(){
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    const dpr = Math.min(window.devicePixelRatio || 1,2);
+
+    canvas.width = Math.floor(W*dpr);
+    canvas.height = Math.floor(H*dpr);
+
+    canvas.style.width = W+"px";
+    canvas.style.height = H+"px";
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    groundY = H - Math.max(95,H*0.14);
+}
+
+window.addEventListener("resize",resize);
+resize();
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+const scoreEl = document.getElementById("score");
+const coinsEl = document.getElementById("coins");
+const gemsEl = document.getElementById("gems");
+const livesEl = document.getElementById("lives");
+const speedEl = document.getElementById("speed");
+const powerEl = document.getElementById("power");
+
+const message = document.getElementById("message");
+const startButton = document.getElementById("startButton");
+const chapterEl = document.getElementById("chapter");
+
+
+/* =====================================================
+   GAME STATE
+===================================================== */
+
+let state = "menu";
+
+let score = 0;
+let coins = 0;
+let gems = 0;
+let lives = 3;
+
+let distance = 0;
+let gameSpeed = 5;
+
+let world = 0;
+
+let spawnTimer = 0;
+let coinTimer = 0;
+let gemTimer = 0;
+
+let shake = 0;
+
+let power = "";
+let powerTimer = 0;
+
+let paused = false;
+
+let bestScore = Number(
+    localStorage.getItem("ninjaDashBest") || 0
+);
+
+
+/* =====================================================
+   INPUT
+===================================================== */
+
+const keys = {};
+
+window.addEventListener("keydown",e=>{
+
+    const k = e.key.toLowerCase();
+
+    keys[k] = true;
+
+    if(
+        [" ","arrowup","arrowdown","arrowleft","arrowright"]
+        .includes(k)
+    ){
+        e.preventDefault();
+    }
+
+    if(
+        (k === " " || k === "w" || k === "arrowup") &&
+        !e.repeat
+    ){
+        jump();
+    }
+
+    if(
+        (k === "shift" || k === "x") &&
+        !e.repeat
+    ){
+        dash();
+    }
+
+    if(k === "p"){
+        togglePause();
+    }
+
+    if(k === "r" && state === "gameover"){
+        resetGame();
+    }
+});
+
+window.addEventListener("keyup",e=>{
+    keys[e.key.toLowerCase()] = false;
+});
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener("touchstart",e=>{
+
+    const t = e.touches[0];
+
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+
+    e.preventDefault();
+
+},{passive:false});
+
+canvas.addEventListener("touchend",e=>{
+
+    const t = e.changedTouches[0];
+
+    const dx = t.clientX-touchStartX;
+    const dy = t.clientY-touchStartY;
+
+    if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)){
+        dash();
+    }else{
+        jump();
+    }
+
+    e.preventDefault();
+
+},{passive:false});
+
+
+/* =====================================================
+   PARTICLES
+===================================================== */
+
+const particles = [];
+
+function particle(x,y,color,count=10,powerAmount=3){
+
+    for(let i=0;i<count;i++){
+
+        const a = Math.random()*Math.PI*2;
+        const s = Math.random()*powerAmount+1;
+
+        particles.push({
+            x:x,
+            y:y,
+            vx:Math.cos(a)*s,
+            vy:Math.sin(a)*s,
+            life:1,
+            size:Math.random()*4+1,
+            color:color
+        });
+    }
+}
+
+function updateParticles(){
+
+    for(let i=particles.length-1;i>=0;i--){
+
+        const p = particles[i];
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        p.vx *= .97;
+        p.vy *= .97;
+
+        p.vy += .04;
+
+        p.life -= .025;
+
+        if(p.life<=0){
+            particles.splice(i,1);
+        }
+    }
+}
+
+function drawParticles(){
+
+    for(const p of particles){
+
+        ctx.globalAlpha=p.life;
+        ctx.fillStyle=p.color;
+
+        ctx.beginPath();
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size*p.life,
+            0,
+            Math.PI*2
+        );
+        ctx.fill();
+    }
+
+    ctx.globalAlpha=1;
+}
+
+
+/* =====================================================
+   BACKGROUND STARS
+===================================================== */
+
+const stars = [];
+
+for(let i=0;i<130;i++){
+
+    stars.push({
+        x:Math.random(),
+        y:Math.random()*.65,
+        size:Math.random()*2+1,
+        twinkle:Math.random()*Math.PI*2
+    });
+}
+
+
+/* =====================================================
+   NINJA
+===================================================== */
+
+const ninja = {
+
+    x:170,
+    y:0,
+
+    w:42,
+    h:64,
+
+    vy:0,
+
+    grounded:false,
+
+    jumps:0,
+
+    dashTimer:0,
+
+    dashCooldown:0,
+
+    invincible:0,
+
+    runFrame:0,
+
+    trail:[],
+
+    reset(){
+
+        this.x=170;
+        this.y=groundY-this.h;
+
+        this.vy=0;
+
+        this.grounded=true;
+
+        this.jumps=0;
+
+        this.dashTimer=0;
+
+        this.dashCooldown=0;
+
+        this.invincible=0;
+
+        this.trail=[];
+    },
+
+    update(){
+
+        if(this.invincible>0){
+            this.invincible--;
+        }
+
+        if(this.dashCooldown>0){
+            this.dashCooldown--;
+        }
+
+        if(this.dashTimer>0){
+
+            this.dashTimer--;
+
+            this.x += 13;
+
+            this.trail.push({
+                x:this.x,
+                y:this.y,
+                life:1
+            });
+
+        }else{
+
+            this.x += 0;
+        }
+
+        this.vy += .75;
+
+        this.y += this.vy;
+
+        if(this.y+this.h >= groundY){
+
+            this.y=groundY-this.h;
+
+            this.vy=0;
+
+            if(!this.grounded){
+                particle(
+                    this.x+this.w/2,
+                    groundY,
+                    "#b7ecff",
+                    8,
+                    2
+                );
+            }
+
+            this.grounded=true;
+            this.jumps=0;
+
+        }else{
+
+            this.grounded=false;
+        }
+
+        this.runFrame += .18;
+
+        for(let i=this.trail.length-1;i>=0;i--){
+
+            this.trail[i].life-=.08;
+
+            if(this.trail[i].life<=0){
+                this.trail.splice(i,1);
+            }
+        }
+
+        this.x=170;
+    },
+
+    draw(){
+
+        /* after images */
+
+        for(const t of this.trail){
+
+            ctx.globalAlpha=t.life*.35;
+
+            drawNinja(
+                t.x,
+                t.y,
+                this.w,
+                this.h,
+                "#6e7cff"
+            );
+        }
+
+        ctx.globalAlpha=1;
+
+        drawNinja(
+            this.x,
+            this.y,
+            this.w,
+            this.h,
+            this.invincible%2===0
+            ? "#171c32"
+            : "#ffffff"
+        );
+
+        /* scarf */
+
+        ctx.strokeStyle="#e84966";
+        ctx.lineWidth=5;
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            this.x+8,
+            this.y+24
+        );
+
+        ctx.quadraticCurveTo(
+            this.x-20,
+            this.y+20,
+            this.x-34,
+            this.y+34+
+            Math.sin(this.runFrame)*5
+        );
+
+        ctx.stroke();
+
+        /* dash glow */
+
+        if(this.dashTimer>0){
+
+            ctx.globalAlpha=.35;
+
+            ctx.fillStyle="#70e9ff";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                this.x+20,
+                this.y+32,
+                45,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+            ctx.globalAlpha=1;
+        }
+    }
+};
+
+function drawNinja(x,y,w,h,color){
+
+    /* glow */
+
+    const glow=ctx.createRadialGradient(
+        x+w/2,
+        y+h/2,
+        5,
+        x+w/2,
+        y+h/2,
+        50
+    );
+
+    glow.addColorStop(
+        0,
+        "#6c75ff55"
+    );
+
+    glow.addColorStop(
+        1,
+        "transparent"
+    );
+
+    ctx.fillStyle=glow;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x+w/2,
+        y+h/2,
+        50,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    /* body */
+
+    ctx.fillStyle=color;
+
+    ctx.fillRect(
+        x+8,
+        y+25,
+        27,
+        32
+    );
+
+    /* head */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x+w/2,
+        y+19,
+        16,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    /* headband */
+
+    ctx.fillStyle="#e84966";
+
+    ctx.fillRect(
+        x+4,
+        y+15,
+        34,
+        5
+    );
+
+    /* eyes */
+
+    ctx.fillStyle="#ffffff";
+
+    ctx.fillRect(
+        x+13,
+        y+18,
+        6,
+        3
+    );
+
+    ctx.fillRect(
+        x+23,
+        y+18,
+        6,
+        3
+    );
+
+    /* legs */
+
+    ctx.strokeStyle=color;
+    ctx.lineWidth=9;
+    ctx.lineCap="round";
+
+    const running=
+        Math.sin(ninja.runFrame)*7;
+
+    ctx.beginPath();
+
+    ctx.moveTo(x+15,y+54);
+    ctx.lineTo(
+        x+10-running,
+        y+64
+    );
+
+    ctx.moveTo(x+28,y+54);
+    ctx.lineTo(
+        x+34+running,
+        y+64
+    );
+
+    ctx.stroke();
+}
+
+
+/* =====================================================
+   JUMP
+===================================================== */
+
+function jump(){
+
+    if(state!=="playing" || paused)return;
+
+    if(ninja.grounded){
+
+        ninja.vy=-14;
+        ninja.grounded=false;
+        ninja.jumps=1;
+
+        particle(
+            ninja.x+20,
+            groundY,
+            "#b7ecff",
+            12,
+            3
+        );
+
+    }else if(ninja.jumps<2){
+
+        ninja.vy=-12;
+        ninja.jumps=2;
+
+        particle(
+            ninja.x+20,
+            ninja.y+ninja.h,
+            "#a98cff",
+            14,
+            3
+        );
+    }
+}
+
+
+/* =====================================================
+   DASH
+===================================================== */
+
+function dash(){
+
+    if(
+        state!=="playing" ||
+        paused ||
+        ninja.dashCooldown>0
+    )return;
+
+    ninja.dashCooldown=65;
+
+    ninja.dashTimer=16;
+
+    ninja.invincible=20;
+
+    particle(
+        ninja.x+20,
+        ninja.y+32,
+        "#69e8ff",
+        25,
+        5
+    );
+
+    shake=4;
+}
+
+
+/* =====================================================
+   OBJECTS
+===================================================== */
+
+const obstacles=[];
+const collectibles=[];
+const powerups=[];
+
+function spawnObstacle(){
+
+    const type=Math.random();
+
+    let w=40;
+    let h=45;
+
+    if(type<.25){
+        w=35;
+        h=30;
+    }else if(type<.5){
+        w=55;
+        h=60;
+    }else if(type<.75){
+        w=80;
+        h=35;
+    }else{
+        w=30;
+        h=75;
+    }
+
+    obstacles.push({
+        x:W+80,
+        y:groundY-h,
+        w:w,
+        h:h,
+        type:Math.floor(type*4)
+    });
+}
+
+function spawnCoin(){
+
+    const high=Math.random()<.45;
+
+    collectibles.push({
+        x:W+60,
+        y:high
+            ? groundY-110-Math.random()*90
+            : groundY-55,
+        type:"coin",
+        size:11,
+        spin:0
+    });
+}
+
+function spawnGem(){
+
+    collectibles.push({
+        x:W+60,
+        y:groundY-100-Math.random()*150,
+        type:"gem",
+        size:15,
+        spin:0
+    });
+}
+
+function spawnPower(){
+
+    const types=[
+        "shield",
+        "speed",
+        "magnet",
+        "ghost"
+    ];
+
+    powerups.push({
+        x:W+80,
+        y:groundY-120-Math.random()*120,
+        type:types[
+            Math.floor(Math.random()*types.length)
+        ],
+        size:18,
+        pulse:0
+    });
+}
+
+
+/* =====================================================
+   COLLISION
+===================================================== */
+
+function overlap(a,b){
+
+    return(
+        a.x < b.x+b.w &&
+        a.x+a.w > b.x &&
+        a.y < b.y+b.h &&
+        a.y+a.h > b.y
+    );
+}
+
+function ninjaBox(){
+
+    return{
+        x:ninja.x+8,
+        y:ninja.y+5,
+        w:ninja.w-16,
+        h:ninja.h-8
+    };
+}
+
+
+/* =====================================================
+   UPDATE OBJECTS
+===================================================== */
+
+function updateObstacles(){
+
+    for(let i=obstacles.length-1;i>=0;i--){
+
+        const o=obstacles[i];
+
+        o.x-=gameSpeed;
+
+        if(
+            overlap(
+                ninjaBox(),
+                o
+            )
+        ){
+
+            if(power==="shield"){
+
+                particle(
+                    ninja.x+20,
+                    ninja.y+30,
+                    "#7be8ff",
+                    25,
+                    5
+                );
+
+                shake=7;
+
+                obstacles.splice(i,1);
+
+                continue;
+            }
+
+            if(ninja.invincible<=0){
+
+                loseLife();
+
+                obstacles.splice(i,1);
+
+                continue;
+            }
+        }
+
+        if(o.x+o.w<-100){
+            obstacles.splice(i,1);
+        }
+    }
+}
+
+function updateCollectibles(){
+
+    for(let i=collectibles.length-1;i>=0;i--){
+
+        const c=collectibles[i];
+
+        c.x-=gameSpeed;
+
+        c.spin+=.15;
+
+        const box={
+            x:c.x-c.size,
+            y:c.y-c.size,
+            w:c.size*2,
+            h:c.size*2
+        };
+
+        if(
+            overlap(
+                ninjaBox(),
+                box
+            )
+        ){
+
+            if(c.type==="coin"){
+
+                coins++;
+
+                score+=25;
+
+                particle(
+                    c.x,
+                    c.y,
+                    "#ffd84d",
+                    14,
+                    3
+                );
+
+            }else{
+
+                gems++;
+
+                score+=100;
+
+                particle(
+                    c.x,
+                    c.y,
+                    "#a97cff",
+                    20,
+                    4
+                );
+            }
+
+            collectibles.splice(i,1);
+
+            continue;
+        }
+
+        if(c.x<-50){
+            collectibles.splice(i,1);
+        }
+    }
+}
+
+function updatePowerups(){
+
+    for(let i=powerups.length-1;i>=0;i--){
+
+        const p=powerups[i];
+
+        p.x-=gameSpeed;
+
+        p.pulse+=.1;
+
+        const box={
+            x:p.x-p.size,
+            y:p.y-p.size,
+            w:p.size*2,
+            h:p.size*2
+        };
+
+        if(
+            overlap(
+                ninjaBox(),
+                box
+            )
+        ){
+
+            power=p.type;
+            powerTimer=600;
+
+            particle(
+                p.x,
+                p.y,
+                powerColor(p.type),
+                30,
+                5
+            );
+
+            powerups.splice(i,1);
+
+            continue;
+        }
+
+        if(p.x<-60){
+            powerups.splice(i,1);
+        }
+    }
+}
+
+function powerColor(type){
+
+    if(type==="shield")return"#72eaff";
+    if(type==="speed")return"#ffe066";
+    if(type==="magnet")return"#ff77dc";
+    if(type==="ghost")return"#b9a5ff";
+
+    return"#fff";
+}
+
+
+/* =====================================================
+   LIFE
+===================================================== */
+
+function loseLife(){
+
+    lives--;
+
+    shake=12;
+
+    particle(
+        ninja.x+20,
+        ninja.y+30,
+        "#ff5577",
+        35,
+        6
+    );
+
+    if(lives<=0){
+
+        endGame();
+
+    }else{
+
+        ninja.invincible=100;
+        ninja.y=groundY-ninja.h;
+        ninja.vy=0;
+    }
+}
+
+
+/* =====================================================
+   POWER SYSTEM
+===================================================== */
+
+function updatePower(){
+
+    if(powerTimer>0){
+
+        powerTimer--;
+
+        if(powerTimer<=0){
+            power="";
+        }
+    }
+
+    if(power==="speed"){
+        gameSpeed=Math.min(
+            12,
+            gameSpeed+.015
+        );
+    }
+}
+
+
+/* =====================================================
+   WORLD
+===================================================== */
+
+function updateWorld(){
+
+    const oldWorld=world;
+
+    if(distance<1200){
+        world=0;
+    }else if(distance<2600){
+        world=1;
+    }else if(distance<4500){
+        world=2;
+    }else if(distance<7000){
+        world=3;
+    }else{
+        world=4;
+    }
+
+    if(world!==oldWorld){
+
+        showChapter();
+    }
+}
+
+function showChapter(){
+
+    const names=[
+        "CHAPTER I — THE VILLAGE",
+        "CHAPTER II — BAMBOO FOREST",
+        "CHAPTER III — STORM MOUNTAINS",
+        "CHAPTER IV — FROZEN VALLEY",
+        "FINAL CHAPTER — MOON TEMPLE"
+    ];
+
+    chapterEl.textContent=names[world];
+
+    chapterEl.style.opacity=1;
+
+    setTimeout(()=>{
+        chapterEl.style.opacity=0;
+    },2200);
+}
+
+
+/* =====================================================
+   BACKGROUND
+===================================================== */
+
+function drawBackground(){
+
+    let top;
+    let bottom;
+
+    if(world===0){
+        top="#10183a";
+        bottom="#27345d";
+    }else if(world===1){
+        top="#071b18";
+        bottom="#12382e";
+    }else if(world===2){
+        top="#151b35";
+        bottom="#39445d";
+    }else if(world===3){
+        top="#101b32";
+        bottom="#354c67";
+    }else{
+        top="#09051b";
+        bottom="#321052";
+    }
+
+    const g=ctx.createLinearGradient(
+        0,0,0,H
+    );
+
+    g.addColorStop(0,top);
+    g.addColorStop(1,bottom);
+
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,W,H);
+
+    /* moon */
+
+    ctx.fillStyle="#fff4c4";
+
+    ctx.shadowBlur=35;
+    ctx.shadowColor="#fff1aa";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W*.78,
+        H*.2,
+        42,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    /* stars */
+
+    for(const s of stars){
+
+        const twinkle=
+            .5+
+            Math.sin(
+                performance.now()*.001+s.twinkle
+            )*.3;
+
+        ctx.globalAlpha=twinkle;
+
+        ctx.fillStyle="#ffffff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            s.x*W,
+            s.y*H,
+            s.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+
+    ctx.globalAlpha=1;
+
+    /* distant mountains */
+
+    ctx.fillStyle=
+        world===4
+        ? "#241044"
+        : "#17203c";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,groundY);
+
+    for(let x=0;x<=W+200;x+=160){
+
+        const peak=
+            groundY-
+            100-
+            Math.sin(x*.015+world)*80;
+
+        ctx.lineTo(x,peak);
+        ctx.lineTo(x+80,groundY);
+    }
+
+    ctx.lineTo(W,groundY);
+    ctx.closePath();
+
+    ctx.fill();
+
+    /* world decorations */
+
+    if(world===0){
+        drawVillage();
+    }else if(world===1){
+        drawForest();
+    }else if(world===2){
+        drawMountain();
+    }else if(world===3){
+        drawSnow();
+    }else{
+        drawTemple();
+    }
+}
+
+function drawVillage(){
+
+    ctx.fillStyle="#0a0e1d";
+
+    for(let x=0;x<W;x+=130){
+
+        const h=80+(x%70);
+
+        ctx.fillRect(
+            x,
+            groundY-h,
+            95,
+            h
+        );
+
+        ctx.fillStyle="#d8a95d";
+
+        ctx.fillRect(
+            x+25,
+            groundY-h+25,
+            12,
+            18
+        );
+
+        ctx.fillStyle="#0a0e1d";
+    }
+}
+
+function drawForest(){
+
+    for(let x=0;x<W;x+=100){
+
+        const h=100+(x%80);
+
+        ctx.fillStyle="#07110e";
+
+        ctx.fillRect(
+            x+45,
+            groundY-h,
+            16,
+            h
+        );
+
+        ctx.fillStyle="#0d2b22";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x+53,
+            groundY-h,
+            45,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+}
+
+function drawMountain(){
+
+    ctx.strokeStyle="#ffffff22";
+    ctx.lineWidth=3;
+
+    for(let i=0;i<8;i++){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            i*180,
+            groundY-80
+        );
+
+        ctx.lineTo(
+            i*180+90,
+            groundY-220
+        );
+
+        ctx.lineTo(
+            i*180+180,
+            groundY-80
+        );
+
+        ctx.stroke();
+    }
+}
+
+function drawSnow(){
+
+    ctx.fillStyle="#dceeff";
+
+    for(let i=0;i<35;i++){
+
+        const x=
+            (i*97+
+            performance.now()*.02)
+            %W;
+
+        const y=
+            (i*53+
+            performance.now()*.05)
+            %groundY;
+
+        ctx.globalAlpha=.6;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            2,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+
+    ctx.globalAlpha=1;
+}
+
+function drawTemple(){
+
+    ctx.fillStyle="#160923";
+
+    ctx.fillRect(
+        W*.72,
+        groundY-240,
+        180,
+        240
+    );
+
+    ctx.fillStyle="#4d1d67";
+
+    ctx.fillRect(
+        W*.66,
+        groundY-270,
+        300,
+        30
+    );
+
+    ctx.fillStyle="#ffd76a";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W*.81,
+        groundY-160,
+        35,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+}
+
+
+/* =====================================================
+   GROUND
+===================================================== */
+
+function drawGround(){
+
+    ctx.fillStyle=
+        world===3
+        ? "#d8e8f4"
+        : "#090d18";
+
+    ctx.fillRect(
+        0,
+        groundY,
+        W,
+        H-groundY
+    );
+
+    ctx.strokeStyle=
+        world===3
+        ? "#ffffff"
+        : "#6c7cff55";
+
+    ctx.lineWidth=3;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        groundY
+    );
+
+    ctx.lineTo(
+        W,
+        groundY
+    );
+
+    ctx.stroke();
+
+    /* moving floor lines */
+
+    ctx.strokeStyle="#ffffff12";
+    ctx.lineWidth=1;
+
+    const offset=
+        (distance*2)%80;
+
+    for(
+        let x=-offset;
+        x<W;
+        x+=80
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            groundY+10
+        );
+
+        ctx.lineTo(
+            x+45,
+            H
+        );
+
+        ctx.stroke();
+    }
+}
+
+
+/* =====================================================
+   OBJECT DRAWING
+===================================================== */
+
+function drawObjects(){
+
+    /* obstacles */
+
+    for(const o of obstacles){
+
+        if(o.type===0){
+
+            /* spikes */
+
+            ctx.fillStyle="#e8edf8";
+
+            for(
+                let x=o.x;
+                x<o.x+o.w;
+                x+=10
+            ){
+
+                ctx.beginPath();
+
+                ctx.moveTo(x,groundY);
+                ctx.lineTo(x+5,o.y);
+                ctx.lineTo(x+10,groundY);
+
+                ctx.fill();
+            }
+
+        }else if(o.type===1){
+
+            /* tall rock */
+
+            ctx.fillStyle="#4d5369";
+
+            ctx.beginPath();
+
+            ctx.moveTo(o.x,o.y+o.h);
+            ctx.lineTo(o.x+10,o.y+15);
+            ctx.lineTo(o.x+o.w*.5,o.y);
+            ctx.lineTo(o.x+o.w,o.y+20);
+            ctx.lineTo(o.x+o.w,o.y+o.h);
+
+            ctx.closePath();
+
+            ctx.fill();
+
+        }else if(o.type===2){
+
+            /* log */
+
+            ctx.fillStyle="#70472e";
+
+            ctx.fillRect(
+                o.x,
+                o.y,
+                o.w,
+                o.h
+            );
+
+            ctx.strokeStyle="#b2764c";
+            ctx.lineWidth=4;
+
+            ctx.strokeRect(
+                o.x,
+                o.y,
+                o.w,
+                o.h
+            );
+
+        }else{
+
+            /* wall */
+
+            ctx.fillStyle="#38435b";
+
+            ctx.fillRect(
+                o.x,
+                o.y,
+                o.w,
+                o.h
+            );
+
+            ctx.strokeStyle="#71809e";
+
+            ctx.strokeRect(
+                o.x,
+                o.y,
+                o.w,
+                o.h
+            );
+        }
+    }
+
+    /* collectibles */
+
+    for(const c of collectibles){
+
+        if(c.type==="coin"){
+
+            ctx.save();
+
+            ctx.translate(c.x,c.y);
+            ctx.rotate(Math.sin(c.spin)*.2);
+
+            ctx.fillStyle="#ffd447";
+
+            ctx.shadowBlur=15;
+            ctx.shadowColor="#ffd447";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                0,
+                0,
+                c.size,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+            ctx.shadowBlur=0;
+
+            ctx.fillStyle="#fff1a1";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                -3,
+                -3,
+                3,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+            ctx.restore();
+
+        }else{
+
+            ctx.save();
+
+            ctx.translate(c.x,c.y);
+            ctx.rotate(c.spin);
+
+            ctx.fillStyle="#b084ff";
+
+            ctx.shadowBlur=20;
+            ctx.shadowColor="#9b6cff";
+
+            ctx.beginPath();
+
+            ctx.moveTo(0,-c.size);
+            ctx.lineTo(c.size*.7,0);
+            ctx.lineTo(0,c.size);
+            ctx.lineTo(-c.size*.7,0);
+
+            ctx.closePath();
+
+            ctx.fill();
+
+            ctx.restore();
+        }
+    }
+
+    /* powerups */
+
+    for(const p of powerups){
+
+        const color=powerColor(p.type);
+
+        ctx.save();
+
+        ctx.translate(
+            p.x,
+            p.y
+        );
+
+        const size=
+            p.size+
+            Math.sin(p.pulse)*3;
+
+        ctx.fillStyle=color;
+
+        ctx.shadowBlur=25;
+        ctx.shadowColor=color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            0,
+            size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+        ctx.fillStyle="#101528";
+
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+        ctx.font="bold 13px Arial";
+
+        const symbol=
+            p.type==="shield" ? "S" :
+            p.type==="speed" ? "⚡" :
+            p.type==="magnet" ? "M" : "G";
+
+        ctx.fillText(
+            symbol,
+            0,
+            1
+        );
+
+        ctx.restore();
+    }
+}
+
+
+/* =====================================================
+   SPEED LINES
+===================================================== */
+
+function drawSpeedLines(){
+
+    if(gameSpeed<7)return;
+
+    ctx.strokeStyle="#ffffff18";
+    ctx.lineWidth=2;
+
+    for(let i=0;i<12;i++){
+
+        const y=
+            100+
+            (i*67)%(
+                groundY-120
+            );
+
+        const length=
+            20+
+            gameSpeed*3;
+
+        const x=
+            (i*170-
+            distance*2)%
+            (W+200);
+
+        ctx.beginPath();
+
+        ctx.moveTo(x,y);
+        ctx.lineTo(x+length,y);
+
+        ctx.stroke();
+    }
+}
+
+
+/* =====================================================
+   SPAWNING
+===================================================== */
+
+function spawnStuff(){
+
+    spawnTimer--;
+
+    coinTimer--;
+
+    gemTimer--;
+
+    if(spawnTimer<=0){
+
+        spawnObstacle();
+
+        spawnTimer=
+            Math.max(
+                45,
+                100-
+                Math.floor(
+                    distance/500
+                )
+            );
+    }
+
+    if(coinTimer<=0){
+
+        spawnCoin();
+
+        coinTimer=35+
+            Math.random()*45;
+    }
+
+    if(gemTimer<=0){
+
+        if(Math.random()<.45){
+            spawnGem();
+        }
+
+        gemTimer=180+
+            Math.random()*250;
+    }
+
+    if(
+        Math.random()<.0025
+    ){
+        spawnPower();
+    }
+}
+
+
+/* =====================================================
+   SCORE
+===================================================== */
+
+function updateScore(){
+
+    score += Math.floor(gameSpeed*.08);
+
+    distance += gameSpeed*.08;
+
+    gameSpeed += .0008;
+
+    gameSpeed=Math.min(
+        13,
+        gameSpeed
+    );
+}
+
+
+/* =====================================================
+   UI UPDATE
+===================================================== */
+
+function updateUI(){
+
+    scoreEl.textContent=
+        Math.floor(score);
+
+    coinsEl.textContent=
+        coins;
+
+    gemsEl.textContent=
+        gems;
+
+    livesEl.textContent=
+        lives;
+
+    speedEl.textContent=
+        (gameSpeed/5).toFixed(1)+"x";
+
+    powerEl.textContent=
+        power
+        ? power.toUpperCase()
+        : "None";
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+function startGame(){
+
+    resetGame();
+
+    state="playing";
+
+    message.classList.add("hidden");
+
+    showChapter();
+}
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+function resetGame(){
+
+    score=0;
+    coins=0;
+    gems=0;
+
+    lives=3;
+
+    distance=0;
+
+    gameSpeed=5;
+
+    world=0;
+
+    spawnTimer=70;
+    coinTimer=20;
+    gemTimer=150;
+
+    power="";
+    powerTimer=0;
+
+    shake=0;
+
+    obstacles.length=0;
+    collectibles.length=0;
+    powerups.length=0;
+    particles.length=0;
+
+    ninja.reset();
+
+    paused=false;
+
+    message.classList.add("hidden");
+
+    state="playing";
+
+    updateUI();
+}
+
+
+/* =====================================================
+   GAME OVER
+===================================================== */
+
+function endGame(){
+
+    state="gameover";
+
+    if(score>bestScore){
+
+        bestScore=Math.floor(score);
+
+        localStorage.setItem(
+            "ninjaDashBest",
+            bestScore
+        );
+    }
+
+    message.innerHTML=`
+        <h1>🌙 JOURNEY ENDED</h1>
+
+        <h2>THE MOON STILL WAITS...</h2>
+
+        <p>
+            Score: <b>${Math.floor(score)}</b>
+        </p>
+
+        <p>
+            Coins: <b>${coins}</b>
+            &nbsp; • &nbsp;
+            Gems: <b>${gems}</b>
+        </p>
+
+        <p>
+            Best Score: <b>${bestScore}</b>
+        </p>
+
+        <p>
+            The path continues.
+            The Moon Crystal is still waiting to be found.
+        </p>
+
+        <button onclick="resetGame()">
+            RUN AGAIN
+        </button>
+
+        <p style="font-size:12px;opacity:.5;margin-top:14px">
+            Press R to restart
+        </p>
+    `;
+
+    message.classList.remove("hidden");
+}
+
+
+/* =====================================================
+   PAUSE
+===================================================== */
+
+function togglePause(){
+
+    if(state!=="playing")return;
+
+    paused=!paused;
+
+    if(paused){
+
+        message.innerHTML=`
+            <h1>⏸ PAUSED</h1>
+            <p>
+                Take a breath, ninja.
+            </p>
+            <button onclick="togglePause()">
+                CONTINUE
+            </button>
+        `;
+
+        message.classList.remove("hidden");
+
+    }else{
+
+        message.classList.add("hidden");
+    }
+}
+
+
+/* =====================================================
+   GAME UPDATE
+===================================================== */
+
+function update(){
+
+    if(state!=="playing" || paused){
+        return;
+    }
+
+    updateScore();
+
+    updateWorld();
+
+    updatePower();
+
+    spawnStuff();
+
+    ninja.update();
+
+    updateObstacles();
+
+    updateCollectibles();
+
+    updatePowerups();
+
+    updateParticles();
+
+    updateUI();
+
+    if(shake>0){
+        shake*=.86;
+    }
+}
+
+
+/* =====================================================
+   DRAW
+===================================================== */
+
+function draw(){
+
+    ctx.save();
+
+    if(shake>.2){
+
+        ctx.translate(
+            (Math.random()-.5)*shake,
+            (Math.random()-.5)*shake
+        );
+    }
+
+    drawBackground();
+
+    drawSpeedLines();
+
+    drawGround();
+
+    drawObjects();
+
+    ninja.draw();
+
+    drawParticles();
+
+    ctx.restore();
+}
+
+
+/* =====================================================
+   MAIN LOOP
+===================================================== */
+
+function loop(){
+
+    update();
+
+    draw();
+
+    requestAnimationFrame(loop);
+}
+
+ninja.reset();
+
+loop();
+
+</script>
+
+</body>
+</html>
