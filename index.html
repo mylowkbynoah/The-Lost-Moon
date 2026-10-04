@@ -6,135 +6,364 @@
 <title>Ninja Dash: The Lost Moon</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-
-html,body{
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#050713;
-    font-family:Arial,Helvetica,sans-serif;
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  user-select:none;
 }
 
-canvas{
-    display:block;
-    width:100%;
-    height:100%;
-}
-
-#ui{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    color:white;
-}
-
-#top{
-    position:absolute;
-    top:18px;
-    left:18px;
-    right:18px;
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    text-shadow:0 2px 8px #000;
-}
-
-.panel{
-    background:#070b18aa;
-    border:1px solid #ffffff22;
-    border-radius:12px;
-    padding:10px 14px;
-    backdrop-filter:blur(5px);
-}
-
-.stat{
-    margin:3px 0;
-    font-weight:bold;
-}
-
-#speed{
-    color:#8de7ff;
-}
-
-#power{
-    color:#ffe77a;
-}
-
-#message{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    width:min(700px,90vw);
-    text-align:center;
-    background:#050816e8;
-    border:1px solid #ffffff25;
-    border-radius:20px;
-    padding:35px;
-    box-shadow:0 0 60px #000;
-    pointer-events:auto;
-}
-
-#message h1{
-    font-size:clamp(30px,6vw,64px);
-    letter-spacing:3px;
-    margin-bottom:15px;
-}
-
-#message h2{
-    color:#9eeeff;
-    margin-bottom:15px;
-}
-
-#message p{
-    line-height:1.7;
-    color:#cfd7ef;
-    margin:10px auto;
-    max-width:580px;
+body{
+  background:#070914;
+  color:white;
+  font-family:Arial,Helvetica,sans-serif;
+  overflow:hidden;
 }
 
 button{
-    margin-top:20px;
-    padding:13px 28px;
-    border:0;
-    border-radius:10px;
-    background:#7c6cff;
-    color:white;
-    font-size:16px;
-    font-weight:bold;
-    cursor:pointer;
-    box-shadow:0 0 25px #7c6cff66;
+  border:0;
+  cursor:pointer;
+  color:white;
+  font-weight:bold;
+  border-radius:12px;
+  padding:13px 22px;
+  background:linear-gradient(135deg,#7b5cff,#4b39b8);
+  box-shadow:0 5px 20px #0008;
+  transition:.15s;
 }
 
 button:hover{
-    transform:scale(1.04);
+  transform:translateY(-2px);
+  filter:brightness(1.15);
 }
 
-#controls{
-    position:absolute;
-    bottom:14px;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:12px;
-    color:#ffffff99;
-    text-align:center;
+button:active{
+  transform:scale(.96);
 }
 
-.hidden{
-    display:none !important;
+#game{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  background:#090b18;
 }
 
-#chapter{
-    position:absolute;
-    left:50%;
-    top:15%;
-    transform:translateX(-50%);
-    font-size:15px;
-    letter-spacing:3px;
-    opacity:0;
-    transition:opacity .5s;
-    text-shadow:0 2px 10px #000;
+.screen{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  display:none;
+  overflow:auto;
+  background:
+    radial-gradient(circle at 50% 20%,#28205a88,transparent 45%),
+    linear-gradient(#080a18dd,#080914f5);
+}
+
+.screen.active{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.logo{
+  margin-top:35px;
+  text-align:center;
+  font-size:clamp(34px,7vw,72px);
+  font-weight:900;
+  letter-spacing:2px;
+  text-shadow:0 0 25px #8f7cff;
+}
+
+.subtitle{
+  color:#b9b5d8;
+  margin-top:8px;
+  text-align:center;
+}
+
+.menuBox{
+  width:min(650px,92%);
+  margin:35px auto;
+  padding:25px;
+  border:1px solid #ffffff18;
+  border-radius:22px;
+  background:#111427dd;
+  box-shadow:0 20px 70px #0009;
+}
+
+.menuButtons{
+  display:flex;
+  flex-direction:column;
+  gap:13px;
+  margin-top:25px;
+}
+
+.menuButtons button{
+  width:100%;
+  font-size:18px;
+}
+
+.wallet{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+  flex-wrap:wrap;
+  margin-top:22px;
+}
+
+.money{
+  background:#ffffff0d;
+  border:1px solid #ffffff14;
+  padding:10px 18px;
+  border-radius:14px;
+  font-weight:bold;
+}
+
+.coin{
+  color:#ffd84d;
+}
+
+.gem{
+  color:#68e8ff;
+}
+
+.back{
+  position:absolute;
+  top:20px;
+  left:20px;
+  background:#ffffff12;
+}
+
+.pageTitle{
+  margin-top:30px;
+  font-size:42px;
+  text-shadow:0 0 20px #8c7cff;
+}
+
+.grid{
+  width:min(1050px,94%);
+  margin:25px auto 50px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;
+}
+
+.card{
+  background:linear-gradient(145deg,#15192e,#0e1120);
+  border:1px solid #ffffff12;
+  border-radius:20px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 15px 40px #0007;
+}
+
+.card:hover{
+  border-color:#8c7cff66;
+}
+
+.preview{
+  height:120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:10px;
+}
+
+.ninjaPreview{
+  position:relative;
+  width:60px;
+  height:82px;
+}
+
+.ninjaBody{
+  position:absolute;
+  left:12px;
+  top:22px;
+  width:36px;
+  height:55px;
+  border-radius:12px 12px 8px 8px;
+}
+
+.ninjaHead{
+  position:absolute;
+  left:10px;
+  top:0;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:4px solid #080914;
+}
+
+.eye{
+  position:absolute;
+  left:15px;
+  top:17px;
+  width:10px;
+  height:4px;
+  background:white;
+  box-shadow:15px 0 white;
+}
+
+.scarf{
+  position:absolute;
+  left:38px;
+  top:38px;
+  width:45px;
+  height:10px;
+  border-radius:10px;
+  transform:rotate(-10deg);
+}
+
+.trailPreview{
+  height:75px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.trailLine{
+  width:120px;
+  height:12px;
+  border-radius:50%;
+  box-shadow:0 0 25px currentColor;
+}
+
+.card h3{
+  margin:5px 0 8px;
+}
+
+.desc{
+  color:#aaaec8;
+  min-height:38px;
+  font-size:14px;
+}
+
+.price{
+  margin:13px 0;
+  font-weight:bold;
+}
+
+.locked{
+  color:#ff8b9e;
+}
+
+.owned{
+  color:#6dffad;
+}
+
+.equipped{
+  color:#ffe76a;
+}
+
+.inventoryEmpty{
+  color:#aaaec8;
+  text-align:center;
+  margin-top:70px;
+}
+
+#hud{
+  position:fixed;
+  z-index:10;
+  top:15px;
+  left:15px;
+  right:15px;
+  display:none;
+  justify-content:space-between;
+  pointer-events:none;
+}
+
+.hudBox{
+  background:#080a16bb;
+  border:1px solid #ffffff15;
+  border-radius:13px;
+  padding:10px 14px;
+  backdrop-filter:blur(8px);
+}
+
+#pauseBtn{
+  pointer-events:auto;
+  padding:8px 14px;
+}
+
+#gameMessage{
+  position:fixed;
+  z-index:30;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:#050610bb;
+}
+
+.messageBox{
+  width:min(500px,90%);
+  padding:30px;
+  text-align:center;
+  border-radius:24px;
+  background:#111427f5;
+  box-shadow:0 20px 80px #000;
+}
+
+.messageBox h2{
+  font-size:36px;
+  margin-bottom:15px;
+}
+
+.messageBox p{
+  color:#b9bdd5;
+  margin-bottom:22px;
+  line-height:1.6;
+}
+
+#touchControls{
+  position:fixed;
+  z-index:12;
+  bottom:20px;
+  left:0;
+  right:0;
+  display:none;
+  justify-content:space-between;
+  padding:0 20px;
+  pointer-events:none;
+}
+
+.touchBtn{
+  width:90px;
+  height:65px;
+  border-radius:18px;
+  background:#ffffff16;
+  border:1px solid #ffffff22;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  pointer-events:auto;
+}
+
+.story{
+  color:#bfc3dc;
+  line-height:1.7;
+  text-align:center;
+  margin-top:18px;
+}
+
+@media(max-width:700px){
+  .pageTitle{
+    font-size:32px;
+    margin-top:70px;
+  }
+
+  .logo{
+    margin-top:70px;
+  }
+
+  .menuBox{
+    margin-top:25px;
+  }
+
+  #touchControls{
+    display:flex;
+  }
 }
 </style>
 </head>
@@ -143,129 +372,734 @@ button:hover{
 
 <canvas id="game"></canvas>
 
-<div id="ui">
+<!-- MAIN MENU -->
+<div id="menuScreen" class="screen active">
+  <div class="logo">NINJA DASH</div>
+  <div class="subtitle">THE LOST MOON</div>
 
-    <div id="top">
+  <div class="menuBox">
 
-        <div class="panel">
-            <div class="stat">🥷 NINJA DASH</div>
-            <div class="stat">⭐ Score: <span id="score">0</span></div>
-            <div class="stat">🪙 Coins: <span id="coins">0</span></div>
-            <div class="stat">💎 Gems: <span id="gems">0</span></div>
-        </div>
+    <p class="story">
+      The night the Moon disappeared, everything changed.<br>
+      The ancient Moon Crystal was stolen, and darkness began
+      spreading across the world.
+      Run through villages, forests, mountains and the Moon Temple
+      to recover it.
+    </p>
 
-        <div class="panel">
-            <div class="stat">❤️ Lives: <span id="lives">3</span></div>
-            <div class="stat">⚡ Speed: <span id="speed">1.0x</span></div>
-            <div class="stat">✨ Power: <span id="power">None</span></div>
-        </div>
-
+    <div class="wallet">
+      <div class="money coin">💰 <span id="menuCoins">0</span></div>
+      <div class="money gem">💎 <span id="menuGems">0</span></div>
     </div>
 
-    <div id="chapter"></div>
-
-    <div id="controls">
-        SPACE / W / ↑ = Jump &nbsp; • &nbsp;
-        SHIFT / X = Dash &nbsp; • &nbsp;
-        P = Pause
+    <div class="menuButtons">
+      <button onclick="startGame()">🏃 START RUN</button>
+      <button onclick="showScreen('characters')">🥷 CHARACTERS</button>
+      <button onclick="showScreen('shop')">🛒 SHOP</button>
+      <button onclick="showScreen('inventory')">🎒 INVENTORY</button>
     </div>
 
-    <div id="message">
+  </div>
+</div>
 
-        <h1>🥷 NINJA DASH</h1>
+<!-- SHOP -->
+<div id="shopScreen" class="screen">
+  <button class="back" onclick="showScreen('menu')">← BACK</button>
 
-        <h2>THE LOST MOON</h2>
+  <h1 class="pageTitle">🛒 SHOP</h1>
 
-        <p>
-            The night the Moon disappeared, everything changed.
-        </p>
+  <div class="wallet">
+    <div class="money coin">💰 <span id="shopCoins">0</span></div>
+    <div class="money gem">💎 <span id="shopGems">0</span></div>
+  </div>
 
-        <p>
-            The ancient Moon Crystal has vanished, and darkness
-            is spreading across the land.
-        </p>
+  <div id="shopGrid" class="grid"></div>
+</div>
 
-        <p>
-            Run beyond the village, cross dangerous worlds,
-            collect the lost fragments and discover the truth.
-        </p>
+<!-- CHARACTERS -->
+<div id="charactersScreen" class="screen">
+  <button class="back" onclick="showScreen('menu')">← BACK</button>
 
-        <p>
-            <b>Run. Jump. Dash. Survive. Discover.</b>
-        </p>
+  <h1 class="pageTitle">🥷 CHARACTERS</h1>
 
-        <button id="startButton">START JOURNEY</button>
+  <div id="characterGrid" class="grid"></div>
+</div>
 
-    </div>
+<!-- INVENTORY -->
+<div id="inventoryScreen" class="screen">
+  <button class="back" onclick="showScreen('menu')">← BACK</button>
+
+  <h1 class="pageTitle">🎒 INVENTORY</h1>
+
+  <div id="inventoryGrid" class="grid"></div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+
+  <div class="hudBox">
+    🏆 <span id="score">0</span>
+    &nbsp; 💰 <span id="gameCoins">0</span>
+    &nbsp; 💎 <span id="gameGems">0</span>
+    &nbsp; ❤️ <span id="lives">3</span>
+  </div>
+
+  <button id="pauseBtn" onclick="togglePause()">Ⅱ</button>
 
 </div>
 
-<script>
-"use strict";
+<!-- GAME OVER / PAUSE -->
+<div id="gameMessage">
+  <div class="messageBox">
+    <h2 id="messageTitle">RUN OVER</h2>
+    <p id="messageText"></p>
 
-/* =====================================================
-   CANVAS
-===================================================== */
+    <button onclick="startGame()">RUN AGAIN</button>
+    <button onclick="returnToMenu()" style="margin-left:8px;background:#ffffff18">
+      MENU
+    </button>
+  </div>
+</div>
+
+<!-- MOBILE -->
+<div id="touchControls">
+  <div class="touchBtn" id="jumpBtn">⬆️</div>
+  <div class="touchBtn" id="dashBtn">⚡</div>
+</div>
+
+<script>
+/* =========================================================
+   NINJA DASH: THE LOST MOON
+   SHOP + INVENTORY + CHARACTERS
+========================================================= */
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let W = 0;
-let H = 0;
-let groundY = 0;
+let W = innerWidth;
+let H = innerHeight;
 
 function resize(){
-    W = window.innerWidth;
-    H = window.innerHeight;
-
-    const dpr = Math.min(window.devicePixelRatio || 1,2);
-
-    canvas.width = Math.floor(W*dpr);
-    canvas.height = Math.floor(H*dpr);
-
-    canvas.style.width = W+"px";
-    canvas.style.height = H+"px";
-
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-
-    groundY = H - Math.max(95,H*0.14);
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
 }
 
-window.addEventListener("resize",resize);
+addEventListener("resize",resize);
 resize();
 
+/* =========================================================
+   SAVE DATA
+========================================================= */
 
-/* =====================================================
-   UI
-===================================================== */
+const defaultSave = {
+  coins:0,
+  gems:0,
 
-const scoreEl = document.getElementById("score");
-const coinsEl = document.getElementById("coins");
-const gemsEl = document.getElementById("gems");
-const livesEl = document.getElementById("lives");
-const speedEl = document.getElementById("speed");
-const powerEl = document.getElementById("power");
+  ownedCharacters:["default"],
+  ownedTrails:["default"],
 
-const message = document.getElementById("message");
-const startButton = document.getElementById("startButton");
-const chapterEl = document.getElementById("chapter");
+  equippedCharacter:"default",
+  equippedTrail:"default"
+};
 
+let saveData;
 
-/* =====================================================
-   GAME STATE
-===================================================== */
+try{
+  saveData = JSON.parse(localStorage.getItem("ninjaDashSave"));
+
+  if(!saveData) saveData = structuredClone(defaultSave);
+
+}catch{
+  saveData = structuredClone(defaultSave);
+}
+
+function saveGame(){
+  localStorage.setItem(
+    "ninjaDashSave",
+    JSON.stringify(saveData)
+  );
+
+  updateWallets();
+}
+
+function updateWallets(){
+
+  document.getElementById("menuCoins").textContent = saveData.coins;
+  document.getElementById("menuGems").textContent = saveData.gems;
+
+  document.getElementById("shopCoins").textContent = saveData.coins;
+  document.getElementById("shopGems").textContent = saveData.gems;
+
+  document.getElementById("gameCoins").textContent = saveData.coins;
+  document.getElementById("gameGems").textContent = saveData.gems;
+}
+
+updateWallets();
+
+/* =========================================================
+   CHARACTERS
+========================================================= */
+
+const characters = [
+
+  {
+    id:"default",
+    name:"Moon Runner",
+    price:0,
+    currency:"coins",
+    body:"#20243b",
+    head:"#343957",
+    scarf:"#ef5272",
+    desc:"The original Moon Runner."
+  },
+
+  {
+    id:"shadow",
+    name:"Shadow Ninja",
+    price:500,
+    currency:"coins",
+    body:"#10121d",
+    head:"#1b1e2d",
+    scarf:"#717cff",
+    desc:"A silent ninja from the darkness."
+  },
+
+  {
+    id:"moon",
+    name:"Moon Ninja",
+    price:1500,
+    currency:"coins",
+    body:"#263f68",
+    head:"#385886",
+    scarf:"#9deeff",
+    desc:"Blessed by the light of the Moon."
+  },
+
+  {
+    id:"storm",
+    name:"Storm Ninja",
+    price:3000,
+    currency:"coins",
+    body:"#30394a",
+    head:"#49576e",
+    scarf:"#ffe064",
+    desc:"Fast as lightning."
+  },
+
+  {
+    id:"crystal",
+    name:"Crystal Ninja",
+    price:5000,
+    currency:"coins",
+    body:"#3c245d",
+    head:"#62408d",
+    scarf:"#dc9aff",
+    desc:"Powered by mysterious crystal energy."
+  }
+
+];
+
+const trails = [
+
+  {
+    id:"default",
+    name:"Classic Trail",
+    price:0,
+    currency:"coins",
+    color:"#ffffff",
+    desc:"The classic ninja trail."
+  },
+
+  {
+    id:"blue",
+    name:"Blue Trail",
+    price:300,
+    currency:"coins",
+    color:"#69e8ff",
+    desc:"A bright blue energy trail."
+  },
+
+  {
+    id:"purple",
+    name:"Purple Trail",
+    price:700,
+    currency:"coins",
+    color:"#b084ff",
+    desc:"A mysterious purple trail."
+  },
+
+  {
+    id:"galaxy",
+    name:"Galaxy Trail",
+    price:3000,
+    currency:"coins",
+    color:"#ff69dc",
+    desc:"Looks like the entire galaxy."
+  },
+
+  {
+    id:"moon",
+    name:"Moon Crystal Trail",
+    price:10,
+    currency:"gems",
+    color:"#fff0a3",
+    desc:"Rare energy from the Moon Crystal."
+  }
+
+];
+
+function getCharacter(id){
+  return characters.find(x=>x.id===id);
+}
+
+function getTrail(id){
+  return trails.find(x=>x.id===id);
+}
+
+/* =========================================================
+   SCREENS
+========================================================= */
+
+function showScreen(name){
+
+  document.querySelectorAll(".screen").forEach(s=>{
+    s.classList.remove("active");
+  });
+
+  document.getElementById(name+"Screen").classList.add("active");
+
+  if(name==="menu"){
+    updateWallets();
+  }
+
+  if(name==="shop"){
+    renderShop();
+  }
+
+  if(name==="characters"){
+    renderCharacters();
+  }
+
+  if(name==="inventory"){
+    renderInventory();
+  }
+}
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+function ninjaPreview(character){
+
+  return `
+    <div class="ninjaPreview">
+      <div class="ninjaHead"
+           style="background:${character.head}">
+        <div class="eye"></div>
+      </div>
+
+      <div class="ninjaBody"
+           style="background:${character.body}"></div>
+
+      <div class="scarf"
+           style="background:${character.scarf}"></div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   SHOP
+========================================================= */
+
+function renderShop(){
+
+  const grid = document.getElementById("shopGrid");
+
+  let html = "";
+
+  html += characters.map(c=>{
+
+    const owned =
+      saveData.ownedCharacters.includes(c.id);
+
+    const equipped =
+      saveData.equippedCharacter===c.id;
+
+    let action = "";
+
+    if(equipped){
+
+      action = `<button disabled style="opacity:.6">
+                  ⭐ EQUIPPED
+                </button>`;
+
+    }else if(owned){
+
+      action = `<button onclick="equipCharacter('${c.id}')">
+                  EQUIP
+                </button>`;
+
+    }else{
+
+      action = `<button onclick="buyCharacter('${c.id}')">
+                  BUY
+                </button>`;
+    }
+
+    let price =
+      c.price===0
+      ? `<span class="owned">FREE</span>`
+      : `💰 ${c.price}`;
+
+    return `
+      <div class="card">
+
+        <div class="preview">
+          ${ninjaPreview(c)}
+        </div>
+
+        <h3>${c.name}</h3>
+
+        <p class="desc">${c.desc}</p>
+
+        <div class="price">${price}</div>
+
+        ${action}
+
+      </div>
+    `;
+
+  }).join("");
+
+  html += trails.map(t=>{
+
+    const owned =
+      saveData.ownedTrails.includes(t.id);
+
+    const equipped =
+      saveData.equippedTrail===t.id;
+
+    let action="";
+
+    if(equipped){
+
+      action = `<button disabled style="opacity:.6">
+                  ⭐ EQUIPPED
+                </button>`;
+
+    }else if(owned){
+
+      action = `<button onclick="equipTrail('${t.id}')">
+                  EQUIP
+                </button>`;
+
+    }else{
+
+      action = `<button onclick="buyTrail('${t.id}')">
+                  BUY
+                </button>`;
+    }
+
+    const icon =
+      t.currency==="gems" ? "💎" : "💰";
+
+    const price =
+      t.price===0
+      ? `<span class="owned">FREE</span>`
+      : `${icon} ${t.price}`;
+
+    return `
+      <div class="card">
+
+        <div class="trailPreview">
+          <div class="trailLine"
+               style="background:${t.color};color:${t.color}">
+          </div>
+        </div>
+
+        <h3>${t.name}</h3>
+
+        <p class="desc">${t.desc}</p>
+
+        <div class="price">${price}</div>
+
+        ${action}
+
+      </div>
+    `;
+
+  }).join("");
+
+  grid.innerHTML = html;
+}
+
+/* =========================================================
+   BUY
+========================================================= */
+
+function buyCharacter(id){
+
+  const c = getCharacter(id);
+
+  if(!c) return;
+
+  if(saveData.ownedCharacters.includes(id)){
+    equipCharacter(id);
+    return;
+  }
+
+  if(saveData[c.currency] < c.price){
+
+    alert(
+      "Not enough " +
+      (c.currency==="coins" ? "coins!" : "gems!")
+    );
+
+    return;
+  }
+
+  saveData[c.currency] -= c.price;
+
+  saveData.ownedCharacters.push(id);
+
+  saveData.equippedCharacter = id;
+
+  saveGame();
+
+  renderShop();
+}
+
+function buyTrail(id){
+
+  const t = getTrail(id);
+
+  if(!t) return;
+
+  if(saveData.ownedTrails.includes(id)){
+    equipTrail(id);
+    return;
+  }
+
+  if(saveData[t.currency] < t.price){
+
+    alert(
+      "Not enough " +
+      (t.currency==="coins" ? "coins!" : "gems!")
+    );
+
+    return;
+  }
+
+  saveData[t.currency] -= t.price;
+
+  saveData.ownedTrails.push(id);
+
+  saveData.equippedTrail = id;
+
+  saveGame();
+
+  renderShop();
+}
+
+function equipCharacter(id){
+
+  if(!saveData.ownedCharacters.includes(id))
+    return;
+
+  saveData.equippedCharacter = id;
+
+  saveGame();
+
+  renderCharacters();
+  renderShop();
+  renderInventory();
+}
+
+function equipTrail(id){
+
+  if(!saveData.ownedTrails.includes(id))
+    return;
+
+  saveData.equippedTrail = id;
+
+  saveGame();
+
+  renderShop();
+  renderInventory();
+}
+
+/* =========================================================
+   CHARACTER SCREEN
+========================================================= */
+
+function renderCharacters(){
+
+  const grid =
+    document.getElementById("characterGrid");
+
+  grid.innerHTML = characters.map(c=>{
+
+    const owned =
+      saveData.ownedCharacters.includes(c.id);
+
+    const equipped =
+      saveData.equippedCharacter===c.id;
+
+    let button="";
+
+    if(!owned){
+
+      button = `
+        <button disabled style="opacity:.45">
+          🔒 LOCKED
+        </button>
+      `;
+
+    }else if(equipped){
+
+      button = `
+        <button disabled style="opacity:.6">
+          ⭐ EQUIPPED
+        </button>
+      `;
+
+    }else{
+
+      button = `
+        <button onclick="equipCharacter('${c.id}')">
+          EQUIP
+        </button>
+      `;
+    }
+
+    return `
+      <div class="card">
+
+        <div class="preview">
+          ${ninjaPreview(c)}
+        </div>
+
+        <h3>${c.name}</h3>
+
+        <p class="desc">${c.desc}</p>
+
+        <br>
+
+        ${button}
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+/* =========================================================
+   INVENTORY
+========================================================= */
+
+function renderInventory(){
+
+  const grid =
+    document.getElementById("inventoryGrid");
+
+  let items = [];
+
+  saveData.ownedCharacters.forEach(id=>{
+
+    const c = getCharacter(id);
+
+    if(c){
+
+      const equipped =
+        saveData.equippedCharacter===id;
+
+      items.push(`
+        <div class="card">
+
+          <div class="preview">
+            ${ninjaPreview(c)}
+          </div>
+
+          <h3>${c.name}</h3>
+
+          <p class="owned">OWNED</p>
+
+          ${
+            equipped
+            ? `<p class="equipped">⭐ EQUIPPED</p>`
+            : `<button onclick="equipCharacter('${id}')">
+                 EQUIP
+               </button>`
+          }
+
+        </div>
+      `);
+    }
+  });
+
+  saveData.ownedTrails.forEach(id=>{
+
+    const t = getTrail(id);
+
+    if(t){
+
+      const equipped =
+        saveData.equippedTrail===id;
+
+      items.push(`
+        <div class="card">
+
+          <div class="trailPreview">
+            <div class="trailLine"
+                 style="background:${t.color};color:${t.color}">
+            </div>
+          </div>
+
+          <h3>${t.name}</h3>
+
+          <p class="owned">OWNED</p>
+
+          ${
+            equipped
+            ? `<p class="equipped">⭐ EQUIPPED</p>`
+            : `<button onclick="equipTrail('${id}')">
+                 EQUIP
+               </button>`
+          }
+
+        </div>
+      `);
+    }
+  });
+
+  if(items.length===0){
+
+    grid.innerHTML =
+      `<p class="inventoryEmpty">
+        Your inventory is empty.
+      </p>`;
+
+  }else{
+
+    grid.innerHTML = items.join("");
+  }
+}
+
+/* =========================================================
+   GAME VARIABLES
+========================================================= */
 
 let state = "menu";
 
 let score = 0;
-let coins = 0;
-let gems = 0;
 let lives = 3;
-
 let distance = 0;
-let gameSpeed = 5;
+
+let gameSpeed = 7;
 
 let world = 0;
+
+let paused = false;
 
 let spawnTimer = 0;
 let coinTimer = 0;
@@ -273,1902 +1107,1057 @@ let gemTimer = 0;
 
 let shake = 0;
 
-let power = "";
-let powerTimer = 0;
+let obstacles = [];
+let collectibles = [];
+let particles = [];
+let stars = [];
 
-let paused = false;
+const worlds = [
+  {
+    name:"Village",
+    sky:"#10152b",
+    ground:"#22233b"
+  },
+  {
+    name:"Bamboo Forest",
+    sky:"#09251f",
+    ground:"#12382c"
+  },
+  {
+    name:"Storm Mountains",
+    sky:"#151b2d",
+    ground:"#293247"
+  },
+  {
+    name:"Frozen Valley",
+    sky:"#142b42",
+    ground:"#b9d8e5"
+  },
+  {
+    name:"Moon Temple",
+    sky:"#21143c",
+    ground:"#30204b"
+  }
+];
 
-let bestScore = Number(
-    localStorage.getItem("ninjaDashBest") || 0
-);
-
-
-/* =====================================================
-   INPUT
-===================================================== */
-
-const keys = {};
-
-window.addEventListener("keydown",e=>{
-
-    const k = e.key.toLowerCase();
-
-    keys[k] = true;
-
-    if(
-        [" ","arrowup","arrowdown","arrowleft","arrowright"]
-        .includes(k)
-    ){
-        e.preventDefault();
-    }
-
-    if(
-        (k === " " || k === "w" || k === "arrowup") &&
-        !e.repeat
-    ){
-        jump();
-    }
-
-    if(
-        (k === "shift" || k === "x") &&
-        !e.repeat
-    ){
-        dash();
-    }
-
-    if(k === "p"){
-        togglePause();
-    }
-
-    if(k === "r" && state === "gameover"){
-        resetGame();
-    }
-});
-
-window.addEventListener("keyup",e=>{
-    keys[e.key.toLowerCase()] = false;
-});
-
-
-/* =====================================================
-   MOBILE
-===================================================== */
-
-let touchStartX = 0;
-let touchStartY = 0;
-
-canvas.addEventListener("touchstart",e=>{
-
-    const t = e.touches[0];
-
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-
-    e.preventDefault();
-
-},{passive:false});
-
-canvas.addEventListener("touchend",e=>{
-
-    const t = e.changedTouches[0];
-
-    const dx = t.clientX-touchStartX;
-    const dy = t.clientY-touchStartY;
-
-    if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)){
-        dash();
-    }else{
-        jump();
-    }
-
-    e.preventDefault();
-
-},{passive:false});
-
-
-/* =====================================================
-   PARTICLES
-===================================================== */
-
-const particles = [];
-
-function particle(x,y,color,count=10,powerAmount=3){
-
-    for(let i=0;i<count;i++){
-
-        const a = Math.random()*Math.PI*2;
-        const s = Math.random()*powerAmount+1;
-
-        particles.push({
-            x:x,
-            y:y,
-            vx:Math.cos(a)*s,
-            vy:Math.sin(a)*s,
-            life:1,
-            size:Math.random()*4+1,
-            color:color
-        });
-    }
-}
-
-function updateParticles(){
-
-    for(let i=particles.length-1;i>=0;i--){
-
-        const p = particles[i];
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        p.vx *= .97;
-        p.vy *= .97;
-
-        p.vy += .04;
-
-        p.life -= .025;
-
-        if(p.life<=0){
-            particles.splice(i,1);
-        }
-    }
-}
-
-function drawParticles(){
-
-    for(const p of particles){
-
-        ctx.globalAlpha=p.life;
-        ctx.fillStyle=p.color;
-
-        ctx.beginPath();
-        ctx.arc(
-            p.x,
-            p.y,
-            p.size*p.life,
-            0,
-            Math.PI*2
-        );
-        ctx.fill();
-    }
-
-    ctx.globalAlpha=1;
-}
-
-
-/* =====================================================
-   BACKGROUND STARS
-===================================================== */
-
-const stars = [];
-
-for(let i=0;i<130;i++){
-
-    stars.push({
-        x:Math.random(),
-        y:Math.random()*.65,
-        size:Math.random()*2+1,
-        twinkle:Math.random()*Math.PI*2
-    });
-}
-
-
-/* =====================================================
+/* =========================================================
    NINJA
-===================================================== */
+========================================================= */
 
 const ninja = {
 
-    x:170,
-    y:0,
+  x:170,
+  y:0,
 
-    w:42,
-    h:64,
+  w:48,
+  h:70,
 
-    vy:0,
+  vy:0,
 
-    grounded:false,
+  gravity:.8,
 
-    jumps:0,
+  jumps:0,
 
-    dashTimer:0,
+  dashTimer:0,
 
-    dashCooldown:0,
+  onGround:false,
 
-    invincible:0,
+  reset(){
 
-    runFrame:0,
+    this.x=170;
+    this.y=H-150;
+    this.vy=0;
+    this.jumps=0;
+    this.dashTimer=0;
+  },
 
-    trail:[],
+  jump(){
 
-    reset(){
+    if(state!=="playing" || paused)
+      return;
 
-        this.x=170;
-        this.y=groundY-this.h;
+    if(this.jumps<2){
 
-        this.vy=0;
+      this.vy=-15;
 
-        this.grounded=true;
+      this.jumps++;
 
-        this.jumps=0;
-
-        this.dashTimer=0;
-
-        this.dashCooldown=0;
-
-        this.invincible=0;
-
-        this.trail=[];
-    },
-
-    update(){
-
-        if(this.invincible>0){
-            this.invincible--;
-        }
-
-        if(this.dashCooldown>0){
-            this.dashCooldown--;
-        }
-
-        if(this.dashTimer>0){
-
-            this.dashTimer--;
-
-            this.x += 13;
-
-            this.trail.push({
-                x:this.x,
-                y:this.y,
-                life:1
-            });
-
-        }else{
-
-            this.x += 0;
-        }
-
-        this.vy += .75;
-
-        this.y += this.vy;
-
-        if(this.y+this.h >= groundY){
-
-            this.y=groundY-this.h;
-
-            this.vy=0;
-
-            if(!this.grounded){
-                particle(
-                    this.x+this.w/2,
-                    groundY,
-                    "#b7ecff",
-                    8,
-                    2
-                );
-            }
-
-            this.grounded=true;
-            this.jumps=0;
-
-        }else{
-
-            this.grounded=false;
-        }
-
-        this.runFrame += .18;
-
-        for(let i=this.trail.length-1;i>=0;i--){
-
-            this.trail[i].life-=.08;
-
-            if(this.trail[i].life<=0){
-                this.trail.splice(i,1);
-            }
-        }
-
-        this.x=170;
-    },
-
-    draw(){
-
-        /* after images */
-
-        for(const t of this.trail){
-
-            ctx.globalAlpha=t.life*.35;
-
-            drawNinja(
-                t.x,
-                t.y,
-                this.w,
-                this.h,
-                "#6e7cff"
-            );
-        }
-
-        ctx.globalAlpha=1;
-
-        drawNinja(
-            this.x,
-            this.y,
-            this.w,
-            this.h,
-            this.invincible%2===0
-            ? "#171c32"
-            : "#ffffff"
+      for(let i=0;i<8;i++)
+        createParticle(
+          this.x+20,
+          this.y+60,
+          getTrail(saveData.equippedTrail).color
         );
-
-        /* scarf */
-
-        ctx.strokeStyle="#e84966";
-        ctx.lineWidth=5;
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            this.x+8,
-            this.y+24
-        );
-
-        ctx.quadraticCurveTo(
-            this.x-20,
-            this.y+20,
-            this.x-34,
-            this.y+34+
-            Math.sin(this.runFrame)*5
-        );
-
-        ctx.stroke();
-
-        /* dash glow */
-
-        if(this.dashTimer>0){
-
-            ctx.globalAlpha=.35;
-
-            ctx.fillStyle="#70e9ff";
-
-            ctx.beginPath();
-
-            ctx.arc(
-                this.x+20,
-                this.y+32,
-                45,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-            ctx.globalAlpha=1;
-        }
     }
-};
+  },
 
-function drawNinja(x,y,w,h,color){
+  dash(){
 
-    /* glow */
+    if(state!=="playing" || paused)
+      return;
 
-    const glow=ctx.createRadialGradient(
-        x+w/2,
-        y+h/2,
-        5,
-        x+w/2,
-        y+h/2,
-        50
-    );
+    if(this.dashTimer<=0){
 
-    glow.addColorStop(
-        0,
-        "#6c75ff55"
-    );
+      this.dashTimer=18;
 
-    glow.addColorStop(
-        1,
-        "transparent"
-    );
+      shake=8;
 
-    ctx.fillStyle=glow;
+      for(let i=0;i<20;i++)
+        createParticle(
+          this.x,
+          this.y+30,
+          getTrail(saveData.equippedTrail).color
+        );
+    }
+  },
 
-    ctx.beginPath();
+  update(){
 
-    ctx.arc(
-        x+w/2,
-        y+h/2,
-        50,
-        0,
-        Math.PI*2
-    );
+    if(this.dashTimer>0)
+      this.dashTimer--;
 
-    ctx.fill();
+    this.vy += this.gravity;
+
+    this.y += this.vy;
+
+    const ground=H-115;
+
+    if(this.y+this.h>=ground){
+
+      this.y=ground-this.h;
+
+      this.vy=0;
+
+      this.jumps=0;
+
+      this.onGround=true;
+
+    }else{
+
+      this.onGround=false;
+    }
+
+    this.x=170;
+  },
+
+  draw(){
+
+    const c =
+      getCharacter(saveData.equippedCharacter);
+
+    const t =
+      getTrail(saveData.equippedTrail);
+
+    /* trail */
+
+    for(let i=0;i<5;i++){
+
+      ctx.globalAlpha=.15-i*.025;
+
+      ctx.fillStyle=t.color;
+
+      ctx.fillRect(
+        this.x-i*13,
+        this.y+28,
+        35,
+        10
+      );
+    }
+
+    ctx.globalAlpha=1;
 
     /* body */
 
-    ctx.fillStyle=color;
+    ctx.fillStyle=c.body;
 
-    ctx.fillRect(
-        x+8,
-        y+25,
-        27,
-        32
-    );
-
-    /* head */
-
-    ctx.beginPath();
-
-    ctx.arc(
-        x+w/2,
-        y+19,
-        16,
-        0,
-        Math.PI*2
+    roundRect(
+      ctx,
+      this.x+8,
+      this.y+22,
+      32,
+      45,
+      10
     );
 
     ctx.fill();
 
-    /* headband */
+    /* head */
 
-    ctx.fillStyle="#e84966";
-
-    ctx.fillRect(
-        x+4,
-        y+15,
-        34,
-        5
-    );
-
-    /* eyes */
-
-    ctx.fillStyle="#ffffff";
-
-    ctx.fillRect(
-        x+13,
-        y+18,
-        6,
-        3
-    );
-
-    ctx.fillRect(
-        x+23,
-        y+18,
-        6,
-        3
-    );
-
-    /* legs */
-
-    ctx.strokeStyle=color;
-    ctx.lineWidth=9;
-    ctx.lineCap="round";
-
-    const running=
-        Math.sin(ninja.runFrame)*7;
+    ctx.fillStyle=c.head;
 
     ctx.beginPath();
 
-    ctx.moveTo(x+15,y+54);
-    ctx.lineTo(
-        x+10-running,
-        y+64
+    ctx.arc(
+      this.x+24,
+      this.y+20,
+      22,
+      0,
+      Math.PI*2
     );
 
-    ctx.moveTo(x+28,y+54);
-    ctx.lineTo(
-        x+34+running,
-        y+64
+    ctx.fill();
+
+    /* eyes */
+
+    ctx.fillStyle="#fff";
+
+    ctx.fillRect(
+      this.x+12,
+      this.y+16,
+      7,
+      4
     );
 
-    ctx.stroke();
-}
-
-
-/* =====================================================
-   JUMP
-===================================================== */
-
-function jump(){
-
-    if(state!=="playing" || paused)return;
-
-    if(ninja.grounded){
-
-        ninja.vy=-14;
-        ninja.grounded=false;
-        ninja.jumps=1;
-
-        particle(
-            ninja.x+20,
-            groundY,
-            "#b7ecff",
-            12,
-            3
-        );
-
-    }else if(ninja.jumps<2){
-
-        ninja.vy=-12;
-        ninja.jumps=2;
-
-        particle(
-            ninja.x+20,
-            ninja.y+ninja.h,
-            "#a98cff",
-            14,
-            3
-        );
-    }
-}
-
-
-/* =====================================================
-   DASH
-===================================================== */
-
-function dash(){
-
-    if(
-        state!=="playing" ||
-        paused ||
-        ninja.dashCooldown>0
-    )return;
-
-    ninja.dashCooldown=65;
-
-    ninja.dashTimer=16;
-
-    ninja.invincible=20;
-
-    particle(
-        ninja.x+20,
-        ninja.y+32,
-        "#69e8ff",
-        25,
-        5
+    ctx.fillRect(
+      this.x+29,
+      this.y+16,
+      7,
+      4
     );
 
-    shake=4;
+    /* scarf */
+
+    ctx.fillStyle=c.scarf;
+
+    roundRect(
+      ctx,
+      this.x+35,
+      this.y+35,
+      42,
+      9,
+      6
+    );
+
+    ctx.fill();
+
+    /* legs */
+
+    ctx.fillStyle=c.body;
+
+    ctx.fillRect(
+      this.x+9,
+      this.y+61,
+      12,
+      17
+    );
+
+    ctx.fillRect(
+      this.x+28,
+      this.y+61,
+      12,
+      17
+    );
+
+  }
+};
+
+/* =========================================================
+   HELPER
+========================================================= */
+
+function roundRect(ctx,x,y,w,h,r){
+
+  ctx.beginPath();
+
+  ctx.moveTo(x+r,y);
+
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+
+  ctx.arcTo(x,y+h,x,y,r);
+
+  ctx.arcTo(x,y,x+w,y,r);
+
+  ctx.closePath();
 }
 
-
-/* =====================================================
+/* =========================================================
    OBJECTS
-===================================================== */
-
-const obstacles=[];
-const collectibles=[];
-const powerups=[];
+========================================================= */
 
 function spawnObstacle(){
 
-    const type=Math.random();
+  const types=[
+    "spike",
+    "rock",
+    "log",
+    "wall"
+  ];
 
-    let w=40;
-    let h=45;
+  const type =
+    types[Math.floor(Math.random()*types.length)];
 
-    if(type<.25){
-        w=35;
-        h=30;
-    }else if(type<.5){
-        w=55;
-        h=60;
-    }else if(type<.75){
-        w=80;
-        h=35;
-    }else{
-        w=30;
-        h=75;
-    }
+  const height =
+    type==="wall" ? 70 :
+    type==="spike" ? 35 :
+    45;
 
-    obstacles.push({
-        x:W+80,
-        y:groundY-h,
-        w:w,
-        h:h,
-        type:Math.floor(type*4)
-    });
+  obstacles.push({
+    x:W+40,
+    y:H-115-height,
+    w:type==="wall"?35:50,
+    h:height,
+    type
+  });
 }
 
 function spawnCoin(){
 
-    const high=Math.random()<.45;
+  collectibles.push({
 
-    collectibles.push({
-        x:W+60,
-        y:high
-            ? groundY-110-Math.random()*90
-            : groundY-55,
-        type:"coin",
-        size:11,
-        spin:0
-    });
+    type:"coin",
+
+    x:W+40,
+
+    y:H-190-Math.random()*130,
+
+    w:24,
+    h:24
+  });
 }
 
 function spawnGem(){
 
-    collectibles.push({
-        x:W+60,
-        y:groundY-100-Math.random()*150,
-        type:"gem",
-        size:15,
-        spin:0
-    });
+  collectibles.push({
+
+    type:"gem",
+
+    x:W+40,
+
+    y:H-220-Math.random()*120,
+
+    w:28,
+    h:28
+  });
 }
 
-function spawnPower(){
+/* =========================================================
+   PARTICLES
+========================================================= */
 
-    const types=[
-        "shield",
-        "speed",
-        "magnet",
-        "ghost"
-    ];
+function createParticle(x,y,color){
 
-    powerups.push({
-        x:W+80,
-        y:groundY-120-Math.random()*120,
-        type:types[
-            Math.floor(Math.random()*types.length)
-        ],
-        size:18,
-        pulse:0
-    });
+  particles.push({
+
+    x,
+    y,
+
+    vx:(Math.random()-.5)*5,
+
+    vy:(Math.random()-.5)*5,
+
+    life:35,
+
+    color
+  });
 }
 
+function updateParticles(){
 
-/* =====================================================
+  for(let i=particles.length-1;i>=0;i--){
+
+    const p=particles[i];
+
+    p.x+=p.vx;
+    p.y+=p.vy;
+
+    p.vy+=.08;
+
+    p.life--;
+
+    if(p.life<=0)
+      particles.splice(i,1);
+  }
+}
+
+function drawParticles(){
+
+  particles.forEach(p=>{
+
+    ctx.globalAlpha=p.life/35;
+
+    ctx.fillStyle=p.color;
+
+    ctx.fillRect(
+      p.x,
+      p.y,
+      5,
+      5
+    );
+
+  });
+
+  ctx.globalAlpha=1;
+}
+
+/* =========================================================
    COLLISION
-===================================================== */
+========================================================= */
 
-function overlap(a,b){
+function collision(a,b){
 
-    return(
-        a.x < b.x+b.w &&
-        a.x+a.w > b.x &&
-        a.y < b.y+b.h &&
-        a.y+a.h > b.y
-    );
+  return (
+    a.x < b.x+b.w &&
+    a.x+a.w > b.x &&
+    a.y < b.y+b.h &&
+    a.y+a.h > b.y
+  );
 }
 
-function ninjaBox(){
+/* =========================================================
+   GAME UPDATE
+========================================================= */
 
-    return{
-        x:ninja.x+8,
-        y:ninja.y+5,
-        w:ninja.w-16,
-        h:ninja.h-8
-    };
-}
+function update(){
 
+  if(state!=="playing" || paused)
+    return;
 
-/* =====================================================
-   UPDATE OBJECTS
-===================================================== */
+  score += .12;
 
-function updateObstacles(){
+  distance += gameSpeed;
 
-    for(let i=obstacles.length-1;i>=0;i--){
-
-        const o=obstacles[i];
-
-        o.x-=gameSpeed;
-
-        if(
-            overlap(
-                ninjaBox(),
-                o
-            )
-        ){
-
-            if(power==="shield"){
-
-                particle(
-                    ninja.x+20,
-                    ninja.y+30,
-                    "#7be8ff",
-                    25,
-                    5
-                );
-
-                shake=7;
-
-                obstacles.splice(i,1);
-
-                continue;
-            }
-
-            if(ninja.invincible<=0){
-
-                loseLife();
-
-                obstacles.splice(i,1);
-
-                continue;
-            }
-        }
-
-        if(o.x+o.w<-100){
-            obstacles.splice(i,1);
-        }
-    }
-}
-
-function updateCollectibles(){
-
-    for(let i=collectibles.length-1;i>=0;i--){
-
-        const c=collectibles[i];
-
-        c.x-=gameSpeed;
-
-        c.spin+=.15;
-
-        const box={
-            x:c.x-c.size,
-            y:c.y-c.size,
-            w:c.size*2,
-            h:c.size*2
-        };
-
-        if(
-            overlap(
-                ninjaBox(),
-                box
-            )
-        ){
-
-            if(c.type==="coin"){
-
-                coins++;
-
-                score+=25;
-
-                particle(
-                    c.x,
-                    c.y,
-                    "#ffd84d",
-                    14,
-                    3
-                );
-
-            }else{
-
-                gems++;
-
-                score+=100;
-
-                particle(
-                    c.x,
-                    c.y,
-                    "#a97cff",
-                    20,
-                    4
-                );
-            }
-
-            collectibles.splice(i,1);
-
-            continue;
-        }
-
-        if(c.x<-50){
-            collectibles.splice(i,1);
-        }
-    }
-}
-
-function updatePowerups(){
-
-    for(let i=powerups.length-1;i>=0;i--){
-
-        const p=powerups[i];
-
-        p.x-=gameSpeed;
-
-        p.pulse+=.1;
-
-        const box={
-            x:p.x-p.size,
-            y:p.y-p.size,
-            w:p.size*2,
-            h:p.size*2
-        };
-
-        if(
-            overlap(
-                ninjaBox(),
-                box
-            )
-        ){
-
-            power=p.type;
-            powerTimer=600;
-
-            particle(
-                p.x,
-                p.y,
-                powerColor(p.type),
-                30,
-                5
-            );
-
-            powerups.splice(i,1);
-
-            continue;
-        }
-
-        if(p.x<-60){
-            powerups.splice(i,1);
-        }
-    }
-}
-
-function powerColor(type){
-
-    if(type==="shield")return"#72eaff";
-    if(type==="speed")return"#ffe066";
-    if(type==="magnet")return"#ff77dc";
-    if(type==="ghost")return"#b9a5ff";
-
-    return"#fff";
-}
-
-
-/* =====================================================
-   LIFE
-===================================================== */
-
-function loseLife(){
-
-    lives--;
-
-    shake=12;
-
-    particle(
-        ninja.x+20,
-        ninja.y+30,
-        "#ff5577",
-        35,
-        6
+  gameSpeed =
+    Math.min(
+      15,
+      7 + distance/5000
     );
 
-    if(lives<=0){
+  world =
+    Math.min(
+      worlds.length-1,
+      Math.floor(distance/4000)
+    );
+
+  spawnTimer -= gameSpeed;
+
+  if(spawnTimer<=0){
+
+    spawnObstacle();
+
+    spawnTimer =
+      350 + Math.random()*300;
+  }
+
+  coinTimer -= gameSpeed;
+
+  if(coinTimer<=0){
+
+    spawnCoin();
+
+    coinTimer=180+Math.random()*160;
+  }
+
+  gemTimer -= gameSpeed;
+
+  if(gemTimer<=0){
+
+    spawnGem();
+
+    gemTimer=1200+Math.random()*1000;
+  }
+
+  ninja.update();
+
+  /* obstacles */
+
+  for(let i=obstacles.length-1;i>=0;i--){
+
+    const o=obstacles[i];
+
+    o.x-=gameSpeed;
+
+    if(
+      collision(
+        ninja,
+        o
+      )
+    ){
+
+      if(ninja.dashTimer>0){
+
+        obstacles.splice(i,1);
+
+        score+=25;
+
+        shake=5;
+
+        continue;
+      }
+
+      obstacles.splice(i,1);
+
+      lives--;
+
+      document.getElementById("lives").textContent=lives;
+
+      shake=12;
+
+      if(lives<=0){
 
         endGame();
 
-    }else{
-
-        ninja.invincible=100;
-        ninja.y=groundY-ninja.h;
-        ninja.vy=0;
+        return;
+      }
     }
+
+    if(o.x<-100)
+      obstacles.splice(i,1);
+  }
+
+  /* collectibles */
+
+  for(let i=collectibles.length-1;i>=0;i--){
+
+    const c=collectibles[i];
+
+    c.x-=gameSpeed;
+
+    if(
+      collision(
+        ninja,
+        c
+      )
+    ){
+
+      if(c.type==="coin"){
+
+        saveData.coins++;
+
+        score+=10;
+
+        for(let j=0;j<8;j++)
+          createParticle(
+            c.x,
+            c.y,
+            "#ffd84d"
+          );
+
+      }else{
+
+        saveData.gems++;
+
+        score+=50;
+
+        for(let j=0;j<12;j++)
+          createParticle(
+            c.x,
+            c.y,
+            "#69e8ff"
+          );
+      }
+
+      saveGame();
+
+      collectibles.splice(i,1);
+
+      continue;
+    }
+
+    if(c.x<-100)
+      collectibles.splice(i,1);
+  }
+
+  updateParticles();
+
+  if(shake>0)
+    shake--;
+
+  document.getElementById("score").textContent=
+    Math.floor(score);
+
+  updateWallets();
 }
 
-
-/* =====================================================
-   POWER SYSTEM
-===================================================== */
-
-function updatePower(){
-
-    if(powerTimer>0){
-
-        powerTimer--;
-
-        if(powerTimer<=0){
-            power="";
-        }
-    }
-
-    if(power==="speed"){
-        gameSpeed=Math.min(
-            12,
-            gameSpeed+.015
-        );
-    }
-}
-
-
-/* =====================================================
-   WORLD
-===================================================== */
-
-function updateWorld(){
-
-    const oldWorld=world;
-
-    if(distance<1200){
-        world=0;
-    }else if(distance<2600){
-        world=1;
-    }else if(distance<4500){
-        world=2;
-    }else if(distance<7000){
-        world=3;
-    }else{
-        world=4;
-    }
-
-    if(world!==oldWorld){
-
-        showChapter();
-    }
-}
-
-function showChapter(){
-
-    const names=[
-        "CHAPTER I — THE VILLAGE",
-        "CHAPTER II — BAMBOO FOREST",
-        "CHAPTER III — STORM MOUNTAINS",
-        "CHAPTER IV — FROZEN VALLEY",
-        "FINAL CHAPTER — MOON TEMPLE"
-    ];
-
-    chapterEl.textContent=names[world];
-
-    chapterEl.style.opacity=1;
-
-    setTimeout(()=>{
-        chapterEl.style.opacity=0;
-    },2200);
-}
-
-
-/* =====================================================
-   BACKGROUND
-===================================================== */
+/* =========================================================
+   DRAW BACKGROUND
+========================================================= */
 
 function drawBackground(){
 
-    let top;
-    let bottom;
+  const w=worlds[world];
 
-    if(world===0){
-        top="#10183a";
-        bottom="#27345d";
-    }else if(world===1){
-        top="#071b18";
-        bottom="#12382e";
-    }else if(world===2){
-        top="#151b35";
-        bottom="#39445d";
-    }else if(world===3){
-        top="#101b32";
-        bottom="#354c67";
-    }else{
-        top="#09051b";
-        bottom="#321052";
-    }
-
-    const g=ctx.createLinearGradient(
-        0,0,0,H
+  const gradient =
+    ctx.createLinearGradient(
+      0,0,0,H
     );
 
-    g.addColorStop(0,top);
-    g.addColorStop(1,bottom);
+  gradient.addColorStop(0,w.sky);
+  gradient.addColorStop(1,"#070914");
 
-    ctx.fillStyle=g;
-    ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=gradient;
 
-    /* moon */
+  ctx.fillRect(0,0,W,H);
 
-    ctx.fillStyle="#fff4c4";
+  /* moon */
 
-    ctx.shadowBlur=35;
-    ctx.shadowColor="#fff1aa";
+  ctx.fillStyle="#fff2b8";
+
+  ctx.globalAlpha=.8;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    W-150,
+    110,
+    55,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+  ctx.globalAlpha=1;
+
+  /* stars */
+
+  ctx.fillStyle="#ffffff";
+
+  for(let i=0;i<70;i++){
+
+    const x=
+      (i*137 + distance*.08)%W;
+
+    const y=
+      (i*67)%Math.max(200,H*.6);
+
+    ctx.globalAlpha=.3+(i%3)*.2;
+
+    ctx.fillRect(x,y,2,2);
+  }
+
+  ctx.globalAlpha=1;
+
+  /* background mountains */
+
+  ctx.fillStyle="#11172b";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,H-200);
+
+  for(let x=0;x<=W;x+=120){
+
+    ctx.lineTo(
+      x,
+      H-250-Math.sin(x*.012)*70
+    );
+  }
+
+  ctx.lineTo(W,H);
+
+  ctx.lineTo(0,H);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  /* ground */
+
+  ctx.fillStyle=w.ground;
+
+  ctx.fillRect(
+    0,
+    H-115,
+    W,
+    115
+  );
+
+  /* ground lines */
+
+  ctx.strokeStyle="#ffffff12";
+
+  ctx.lineWidth=3;
+
+  for(
+    let x=-(distance%100);
+    x<W;
+    x+=100
+  ){
+
+    ctx.beginPath();
+
+    ctx.moveTo(x,H-80);
+
+    ctx.lineTo(x+50,H-80);
+
+    ctx.stroke();
+  }
+}
+
+/* =========================================================
+   DRAW OBJECTS
+========================================================= */
+
+function drawObstacle(o){
+
+  if(o.type==="spike"){
+
+    ctx.fillStyle="#ef5272";
+
+    ctx.beginPath();
+
+    ctx.moveTo(o.x,o.y+o.h);
+
+    ctx.lineTo(
+      o.x+o.w/2,
+      o.y
+    );
+
+    ctx.lineTo(
+      o.x+o.w,
+      o.y+o.h
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+  }else{
+
+    ctx.fillStyle =
+      o.type==="wall"
+      ? "#7056a8"
+      : "#694b3a";
+
+    roundRect(
+      ctx,
+      o.x,
+      o.y,
+      o.w,
+      o.h,
+      8
+    );
+
+    ctx.fill();
+  }
+}
+
+function drawCollectible(c){
+
+  if(c.type==="coin"){
+
+    ctx.fillStyle="#ffd84d";
+
+    ctx.shadowColor="#ffd84d";
+
+    ctx.shadowBlur=15;
 
     ctx.beginPath();
 
     ctx.arc(
-        W*.78,
-        H*.2,
-        42,
-        0,
-        Math.PI*2
+      c.x+12,
+      c.y+12,
+      11,
+      0,
+      Math.PI*2
     );
 
     ctx.fill();
 
     ctx.shadowBlur=0;
 
-    /* stars */
+  }else{
 
-    for(const s of stars){
+    ctx.fillStyle="#69e8ff";
 
-        const twinkle=
-            .5+
-            Math.sin(
-                performance.now()*.001+s.twinkle
-            )*.3;
+    ctx.shadowColor="#69e8ff";
 
-        ctx.globalAlpha=twinkle;
-
-        ctx.fillStyle="#ffffff";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            s.x*W,
-            s.y*H,
-            s.size,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-    }
-
-    ctx.globalAlpha=1;
-
-    /* distant mountains */
-
-    ctx.fillStyle=
-        world===4
-        ? "#241044"
-        : "#17203c";
+    ctx.shadowBlur=20;
 
     ctx.beginPath();
 
-    ctx.moveTo(0,groundY);
+    ctx.moveTo(c.x+14,c.y);
 
-    for(let x=0;x<=W+200;x+=160){
+    ctx.lineTo(c.x+27,c.y+14);
 
-        const peak=
-            groundY-
-            100-
-            Math.sin(x*.015+world)*80;
+    ctx.lineTo(c.x+14,c.y+28);
 
-        ctx.lineTo(x,peak);
-        ctx.lineTo(x+80,groundY);
-    }
+    ctx.lineTo(c.x,c.y+14);
 
-    ctx.lineTo(W,groundY);
     ctx.closePath();
 
     ctx.fill();
 
-    /* world decorations */
-
-    if(world===0){
-        drawVillage();
-    }else if(world===1){
-        drawForest();
-    }else if(world===2){
-        drawMountain();
-    }else if(world===3){
-        drawSnow();
-    }else{
-        drawTemple();
-    }
+    ctx.shadowBlur=0;
+  }
 }
 
-function drawVillage(){
-
-    ctx.fillStyle="#0a0e1d";
-
-    for(let x=0;x<W;x+=130){
-
-        const h=80+(x%70);
-
-        ctx.fillRect(
-            x,
-            groundY-h,
-            95,
-            h
-        );
-
-        ctx.fillStyle="#d8a95d";
-
-        ctx.fillRect(
-            x+25,
-            groundY-h+25,
-            12,
-            18
-        );
-
-        ctx.fillStyle="#0a0e1d";
-    }
-}
-
-function drawForest(){
-
-    for(let x=0;x<W;x+=100){
-
-        const h=100+(x%80);
-
-        ctx.fillStyle="#07110e";
-
-        ctx.fillRect(
-            x+45,
-            groundY-h,
-            16,
-            h
-        );
-
-        ctx.fillStyle="#0d2b22";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            x+53,
-            groundY-h,
-            45,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-    }
-}
-
-function drawMountain(){
-
-    ctx.strokeStyle="#ffffff22";
-    ctx.lineWidth=3;
-
-    for(let i=0;i<8;i++){
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            i*180,
-            groundY-80
-        );
-
-        ctx.lineTo(
-            i*180+90,
-            groundY-220
-        );
-
-        ctx.lineTo(
-            i*180+180,
-            groundY-80
-        );
-
-        ctx.stroke();
-    }
-}
-
-function drawSnow(){
-
-    ctx.fillStyle="#dceeff";
-
-    for(let i=0;i<35;i++){
-
-        const x=
-            (i*97+
-            performance.now()*.02)
-            %W;
-
-        const y=
-            (i*53+
-            performance.now()*.05)
-            %groundY;
-
-        ctx.globalAlpha=.6;
-
-        ctx.beginPath();
-
-        ctx.arc(
-            x,
-            y,
-            2,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-    }
-
-    ctx.globalAlpha=1;
-}
-
-function drawTemple(){
-
-    ctx.fillStyle="#160923";
-
-    ctx.fillRect(
-        W*.72,
-        groundY-240,
-        180,
-        240
-    );
-
-    ctx.fillStyle="#4d1d67";
-
-    ctx.fillRect(
-        W*.66,
-        groundY-270,
-        300,
-        30
-    );
-
-    ctx.fillStyle="#ffd76a";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        W*.81,
-        groundY-160,
-        35,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-}
-
-
-/* =====================================================
-   GROUND
-===================================================== */
-
-function drawGround(){
-
-    ctx.fillStyle=
-        world===3
-        ? "#d8e8f4"
-        : "#090d18";
-
-    ctx.fillRect(
-        0,
-        groundY,
-        W,
-        H-groundY
-    );
-
-    ctx.strokeStyle=
-        world===3
-        ? "#ffffff"
-        : "#6c7cff55";
-
-    ctx.lineWidth=3;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        groundY
-    );
-
-    ctx.lineTo(
-        W,
-        groundY
-    );
-
-    ctx.stroke();
-
-    /* moving floor lines */
-
-    ctx.strokeStyle="#ffffff12";
-    ctx.lineWidth=1;
-
-    const offset=
-        (distance*2)%80;
-
-    for(
-        let x=-offset;
-        x<W;
-        x+=80
-    ){
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            x,
-            groundY+10
-        );
-
-        ctx.lineTo(
-            x+45,
-            H
-        );
-
-        ctx.stroke();
-    }
-}
-
-
-/* =====================================================
-   OBJECT DRAWING
-===================================================== */
-
-function drawObjects(){
-
-    /* obstacles */
-
-    for(const o of obstacles){
-
-        if(o.type===0){
-
-            /* spikes */
-
-            ctx.fillStyle="#e8edf8";
-
-            for(
-                let x=o.x;
-                x<o.x+o.w;
-                x+=10
-            ){
-
-                ctx.beginPath();
-
-                ctx.moveTo(x,groundY);
-                ctx.lineTo(x+5,o.y);
-                ctx.lineTo(x+10,groundY);
-
-                ctx.fill();
-            }
-
-        }else if(o.type===1){
-
-            /* tall rock */
-
-            ctx.fillStyle="#4d5369";
-
-            ctx.beginPath();
-
-            ctx.moveTo(o.x,o.y+o.h);
-            ctx.lineTo(o.x+10,o.y+15);
-            ctx.lineTo(o.x+o.w*.5,o.y);
-            ctx.lineTo(o.x+o.w,o.y+20);
-            ctx.lineTo(o.x+o.w,o.y+o.h);
-
-            ctx.closePath();
-
-            ctx.fill();
-
-        }else if(o.type===2){
-
-            /* log */
-
-            ctx.fillStyle="#70472e";
-
-            ctx.fillRect(
-                o.x,
-                o.y,
-                o.w,
-                o.h
-            );
-
-            ctx.strokeStyle="#b2764c";
-            ctx.lineWidth=4;
-
-            ctx.strokeRect(
-                o.x,
-                o.y,
-                o.w,
-                o.h
-            );
-
-        }else{
-
-            /* wall */
-
-            ctx.fillStyle="#38435b";
-
-            ctx.fillRect(
-                o.x,
-                o.y,
-                o.w,
-                o.h
-            );
-
-            ctx.strokeStyle="#71809e";
-
-            ctx.strokeRect(
-                o.x,
-                o.y,
-                o.w,
-                o.h
-            );
-        }
-    }
-
-    /* collectibles */
-
-    for(const c of collectibles){
-
-        if(c.type==="coin"){
-
-            ctx.save();
-
-            ctx.translate(c.x,c.y);
-            ctx.rotate(Math.sin(c.spin)*.2);
-
-            ctx.fillStyle="#ffd447";
-
-            ctx.shadowBlur=15;
-            ctx.shadowColor="#ffd447";
-
-            ctx.beginPath();
-
-            ctx.arc(
-                0,
-                0,
-                c.size,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-            ctx.shadowBlur=0;
-
-            ctx.fillStyle="#fff1a1";
-
-            ctx.beginPath();
-
-            ctx.arc(
-                -3,
-                -3,
-                3,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-            ctx.restore();
-
-        }else{
-
-            ctx.save();
-
-            ctx.translate(c.x,c.y);
-            ctx.rotate(c.spin);
-
-            ctx.fillStyle="#b084ff";
-
-            ctx.shadowBlur=20;
-            ctx.shadowColor="#9b6cff";
-
-            ctx.beginPath();
-
-            ctx.moveTo(0,-c.size);
-            ctx.lineTo(c.size*.7,0);
-            ctx.lineTo(0,c.size);
-            ctx.lineTo(-c.size*.7,0);
-
-            ctx.closePath();
-
-            ctx.fill();
-
-            ctx.restore();
-        }
-    }
-
-    /* powerups */
-
-    for(const p of powerups){
-
-        const color=powerColor(p.type);
-
-        ctx.save();
-
-        ctx.translate(
-            p.x,
-            p.y
-        );
-
-        const size=
-            p.size+
-            Math.sin(p.pulse)*3;
-
-        ctx.fillStyle=color;
-
-        ctx.shadowBlur=25;
-        ctx.shadowColor=color;
-
-        ctx.beginPath();
-
-        ctx.arc(
-            0,
-            0,
-            size,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-        ctx.shadowBlur=0;
-
-        ctx.fillStyle="#101528";
-
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-        ctx.font="bold 13px Arial";
-
-        const symbol=
-            p.type==="shield" ? "S" :
-            p.type==="speed" ? "⚡" :
-            p.type==="magnet" ? "M" : "G";
-
-        ctx.fillText(
-            symbol,
-            0,
-            1
-        );
-
-        ctx.restore();
-    }
-}
-
-
-/* =====================================================
-   SPEED LINES
-===================================================== */
-
-function drawSpeedLines(){
-
-    if(gameSpeed<7)return;
-
-    ctx.strokeStyle="#ffffff18";
-    ctx.lineWidth=2;
-
-    for(let i=0;i<12;i++){
-
-        const y=
-            100+
-            (i*67)%(
-                groundY-120
-            );
-
-        const length=
-            20+
-            gameSpeed*3;
-
-        const x=
-            (i*170-
-            distance*2)%
-            (W+200);
-
-        ctx.beginPath();
-
-        ctx.moveTo(x,y);
-        ctx.lineTo(x+length,y);
-
-        ctx.stroke();
-    }
-}
-
-
-/* =====================================================
-   SPAWNING
-===================================================== */
-
-function spawnStuff(){
-
-    spawnTimer--;
-
-    coinTimer--;
-
-    gemTimer--;
-
-    if(spawnTimer<=0){
-
-        spawnObstacle();
-
-        spawnTimer=
-            Math.max(
-                45,
-                100-
-                Math.floor(
-                    distance/500
-                )
-            );
-    }
-
-    if(coinTimer<=0){
-
-        spawnCoin();
-
-        coinTimer=35+
-            Math.random()*45;
-    }
-
-    if(gemTimer<=0){
-
-        if(Math.random()<.45){
-            spawnGem();
-        }
-
-        gemTimer=180+
-            Math.random()*250;
-    }
-
-    if(
-        Math.random()<.0025
-    ){
-        spawnPower();
-    }
-}
-
-
-/* =====================================================
-   SCORE
-===================================================== */
-
-function updateScore(){
-
-    score += Math.floor(gameSpeed*.08);
-
-    distance += gameSpeed*.08;
-
-    gameSpeed += .0008;
-
-    gameSpeed=Math.min(
-        13,
-        gameSpeed
-    );
-}
-
-
-/* =====================================================
-   UI UPDATE
-===================================================== */
-
-function updateUI(){
-
-    scoreEl.textContent=
-        Math.floor(score);
-
-    coinsEl.textContent=
-        coins;
-
-    gemsEl.textContent=
-        gems;
-
-    livesEl.textContent=
-        lives;
-
-    speedEl.textContent=
-        (gameSpeed/5).toFixed(1)+"x";
-
-    powerEl.textContent=
-        power
-        ? power.toUpperCase()
-        : "None";
-}
-
-
-/* =====================================================
-   START
-===================================================== */
-
-function startGame(){
-
-    resetGame();
-
-    state="playing";
-
-    message.classList.add("hidden");
-
-    showChapter();
-}
-
-startButton.addEventListener(
-    "click",
-    startGame
-);
-
-
-/* =====================================================
-   RESET
-===================================================== */
-
-function resetGame(){
-
-    score=0;
-    coins=0;
-    gems=0;
-
-    lives=3;
-
-    distance=0;
-
-    gameSpeed=5;
-
-    world=0;
-
-    spawnTimer=70;
-    coinTimer=20;
-    gemTimer=150;
-
-    power="";
-    powerTimer=0;
-
-    shake=0;
-
-    obstacles.length=0;
-    collectibles.length=0;
-    powerups.length=0;
-    particles.length=0;
-
-    ninja.reset();
-
-    paused=false;
-
-    message.classList.add("hidden");
-
-    state="playing";
-
-    updateUI();
-}
-
-
-/* =====================================================
-   GAME OVER
-===================================================== */
-
-function endGame(){
-
-    state="gameover";
-
-    if(score>bestScore){
-
-        bestScore=Math.floor(score);
-
-        localStorage.setItem(
-            "ninjaDashBest",
-            bestScore
-        );
-    }
-
-    message.innerHTML=`
-        <h1>🌙 JOURNEY ENDED</h1>
-
-        <h2>THE MOON STILL WAITS...</h2>
-
-        <p>
-            Score: <b>${Math.floor(score)}</b>
-        </p>
-
-        <p>
-            Coins: <b>${coins}</b>
-            &nbsp; • &nbsp;
-            Gems: <b>${gems}</b>
-        </p>
-
-        <p>
-            Best Score: <b>${bestScore}</b>
-        </p>
-
-        <p>
-            The path continues.
-            The Moon Crystal is still waiting to be found.
-        </p>
-
-        <button onclick="resetGame()">
-            RUN AGAIN
-        </button>
-
-        <p style="font-size:12px;opacity:.5;margin-top:14px">
-            Press R to restart
-        </p>
-    `;
-
-    message.classList.remove("hidden");
-}
-
-
-/* =====================================================
-   PAUSE
-===================================================== */
-
-function togglePause(){
-
-    if(state!=="playing")return;
-
-    paused=!paused;
-
-    if(paused){
-
-        message.innerHTML=`
-            <h1>⏸ PAUSED</h1>
-            <p>
-                Take a breath, ninja.
-            </p>
-            <button onclick="togglePause()">
-                CONTINUE
-            </button>
-        `;
-
-        message.classList.remove("hidden");
-
-    }else{
-
-        message.classList.add("hidden");
-    }
-}
-
-
-/* =====================================================
-   GAME UPDATE
-===================================================== */
-
-function update(){
-
-    if(state!=="playing" || paused){
-        return;
-    }
-
-    updateScore();
-
-    updateWorld();
-
-    updatePower();
-
-    spawnStuff();
-
-    ninja.update();
-
-    updateObstacles();
-
-    updateCollectibles();
-
-    updatePowerups();
-
-    updateParticles();
-
-    updateUI();
-
-    if(shake>0){
-        shake*=.86;
-    }
-}
-
-
-/* =====================================================
+/* =========================================================
    DRAW
-===================================================== */
+========================================================= */
 
 function draw(){
 
-    ctx.save();
+  ctx.save();
 
-    if(shake>.2){
+  if(shake>0){
 
-        ctx.translate(
-            (Math.random()-.5)*shake,
-            (Math.random()-.5)*shake
-        );
-    }
+    ctx.translate(
+      (Math.random()-.5)*shake,
+      (Math.random()-.5)*shake
+    );
+  }
 
-    drawBackground();
+  drawBackground();
 
-    drawSpeedLines();
+  obstacles.forEach(drawObstacle);
 
-    drawGround();
+  collectibles.forEach(drawCollectible);
 
-    drawObjects();
+  drawParticles();
 
+  if(state==="playing")
     ninja.draw();
 
-    drawParticles();
-
-    ctx.restore();
+  ctx.restore();
 }
 
+/* =========================================================
+   GAME START
+========================================================= */
 
-/* =====================================================
-   MAIN LOOP
-===================================================== */
+function startGame(){
+
+  document.querySelectorAll(".screen").forEach(s=>{
+    s.classList.remove("active");
+  });
+
+  document.getElementById("hud").style.display="flex";
+
+  document.getElementById("gameMessage").style.display="none";
+
+  state="playing";
+
+  paused=false;
+
+  score=0;
+
+  lives=3;
+
+  distance=0;
+
+  gameSpeed=7;
+
+  world=0;
+
+  spawnTimer=300;
+
+  coinTimer=100;
+
+  gemTimer=700;
+
+  obstacles=[];
+
+  collectibles=[];
+
+  particles=[];
+
+  ninja.reset();
+
+  document.getElementById("lives").textContent=lives;
+
+  updateWallets();
+}
+
+/* =========================================================
+   END GAME
+========================================================= */
+
+function endGame(){
+
+  state="gameover";
+
+  document.getElementById("hud").style.display="none";
+
+  const finalScore=Math.floor(score);
+
+  const best=
+    Number(localStorage.getItem("ninjaDashBest")||0);
+
+  let newBest=false;
+
+  if(finalScore>best){
+
+    localStorage.setItem(
+      "ninjaDashBest",
+      finalScore
+    );
+
+    newBest=true;
+  }
+
+  document.getElementById("messageTitle").textContent =
+    newBest ? "🏆 NEW BEST!" : "RUN OVER";
+
+  document.getElementById("messageText").innerHTML =
+    `Score: <b>${finalScore}</b><br>
+     Distance: <b>${Math.floor(distance)}</b><br><br>
+     Coins and gems you collected have been saved!`;
+
+  document.getElementById("gameMessage").style.display="flex";
+}
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+function togglePause(){
+
+  if(state!=="playing")
+    return;
+
+  paused=!paused;
+
+  document.getElementById("pauseBtn").textContent =
+    paused ? "▶" : "Ⅱ";
+
+  if(paused){
+
+    document.getElementById("messageTitle").textContent =
+      "PAUSED";
+
+    document.getElementById("messageText").textContent =
+      "Take a breath, ninja.";
+
+    document.getElementById("gameMessage").style.display="flex";
+
+  }else{
+
+    document.getElementById("gameMessage").style.display="none";
+  }
+}
+
+function returnToMenu(){
+
+  state="menu";
+
+  paused=false;
+
+  document.getElementById("hud").style.display="none";
+
+  document.getElementById("gameMessage").style.display="none";
+
+  showScreen("menu");
+}
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+addEventListener("keydown",e=>{
+
+  if(e.code==="Space" || e.code==="ArrowUp"){
+
+    e.preventDefault();
+
+    if(state==="playing")
+      ninja.jump();
+  }
+
+  if(
+    e.code==="ShiftLeft" ||
+    e.code==="ShiftRight" ||
+    e.code==="KeyX"
+  ){
+
+    ninja.dash();
+  }
+
+  if(e.code==="Escape"){
+
+    if(state==="playing")
+      togglePause();
+  }
+
+  if(e.code==="KeyR" && state==="gameover"){
+
+    startGame();
+  }
+});
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+document.getElementById("jumpBtn")
+.addEventListener("touchstart",e=>{
+
+  e.preventDefault();
+
+  ninja.jump();
+
+},{passive:false});
+
+document.getElementById("dashBtn")
+.addEventListener("touchstart",e=>{
+
+  e.preventDefault();
+
+  ninja.dash();
+
+},{passive:false});
+
+let touchStartX=0;
+let touchStartY=0;
+
+addEventListener("touchstart",e=>{
+
+  if(e.touches.length!==1)
+    return;
+
+  touchStartX=e.touches[0].clientX;
+  touchStartY=e.touches[0].clientY;
+
+},{passive:true});
+
+addEventListener("touchend",e=>{
+
+  if(!e.changedTouches.length)
+    return;
+
+  const x=e.changedTouches[0].clientX;
+  const y=e.changedTouches[0].clientY;
+
+  const dx=x-touchStartX;
+  const dy=y-touchStartY;
+
+  if(Math.abs(dx)>70){
+
+    if(dx>0)
+      ninja.dash();
+
+  }else if(Math.abs(dy)<70){
+
+    ninja.jump();
+  }
+
+},{passive:true});
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
 
 function loop(){
 
-    update();
+  update();
 
-    draw();
+  draw();
 
-    requestAnimationFrame(loop);
+  requestAnimationFrame(loop);
 }
 
-ninja.reset();
-
 loop();
+
+/* =========================================================
+   INITIAL RENDER
+========================================================= */
+
+renderShop();
+renderCharacters();
+renderInventory();
+updateWallets();
 
 </script>
 
